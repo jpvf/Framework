@@ -1,0 +1,100 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Saga - Version de pruebas</title>
+
+    <?php 
+    //<link href='<?php echo base_url() ?/>min/index.php?f=css/reset.css,css/style.css,css/base/style.css&debug=true' type='text/css' rel='stylesheet' />
+        Assets::css('reset');
+        Assets::css('style');
+        Assets::css('base/style');
+        Assets::css('jquery-ui');
+        Assets::css('tooltips');
+        (isset($css) AND !empty($css)) ? Assets::css($css):'';
+        echo Assets::show_css(); 
+    ?>
+
+    
+    <!--[if IE 6]>
+    <link rel="stylesheet" href="<?php echo base_url()?>css/ie.css" type="text/css" />
+    <![endif]-->    
+</head>
+
+<body>
+<!--[if IE 7]>
+   <div style='height:auto !important'>
+<![endif]-->  
+    <div id="container">
+        <div id="header">
+                <div id="top">
+          </div>
+          <span class="clearFix">&nbsp;</span>
+        </div><!-- end of #header -->
+    
+    <div id="content">
+
+        <div id="content-top">
+            <h2><?php echo (isset($section_title) && !empty($section_title))? $section_title : ''?></h2>  
+           <span class="clearFix">&nbsp;</span>       
+          </div><!-- end of div#content-top -->
+            <div id="mid-col" style="margin:auto;float:none;width:555px">
+      
+
+        <div class="box">      
+            <h4 class="white">Página no encontrada</h4>
+        <div class="box-container">
+            <p class="paragraph">
+                La página solicitada no ha sido encontrada.
+                <br>
+                <br>
+                <br>
+                <?php echo anchor('', 'Volver al inicio.', array('class' => 'align-right'))?>
+                <?php echo clear_fix(); ?>
+            </p>
+        </div><!-- end of div.box-container -->
+        </div><!-- end of div.box -->
+        
+    
+      
+      </div><!-- end of div#mid-col -->
+          <span class="clearFix">&nbsp;</span>     
+    </div><!-- end of div#content -->
+    <div class="push"></div>
+    </div><!-- end of #container -->
+    
+    <div id="footer-wrap">
+        <div id="footer">
+            <div id="footer-top">
+                <div class="align-left">
+                
+                </div>
+                <div class="align-right">
+                <h2>&nbsp;</h2>
+                </div>
+                <span class="clearFix"></span>
+            </div><!-- end of div#footer-top -->
+            
+            <div id="footer-bottom">
+                <p>&nbsp;</p>
+            </div>        
+        </div>
+    </div>
+<!--[if IE 7]>
+   </div>
+<![endif]-->  
+      <?php   
+        Assets::script('jquery');
+        Assets::script('jquery.ui');
+        Assets::script('bg.pos-min');
+        Assets::script('jquery.corners.min');
+        Assets::script('cleanity');
+        Assets::script('jquery.placeholder');
+        (isset($js) && !empty($js)) ? Assets::script($js):'';
+        echo Assets::show_scripts(); 
+    ?>
+
+</body>
+</html>
+ 

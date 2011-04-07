@@ -1,0 +1,17 @@
+<?php 
+/*s
+ * Archivo de configuracion para auto cargar librerias.
+ * 
+ * Se pueden autocargar: Librerias, helpers y archivos de lenguaje
+ * El formato debe ser : $autoload['tipo'] = array('libreria', 'libreria1');
+ * 
+ * Solo debe existir un array por cada item.
+ */
+$autoload['libraries'] = array('login', 'acl', 'modules', array('breadcrumbs' => 'nav'), 'template');
+
+$autoload['helpers']   = array('helpers', 'debug', 'html', 'url', 'form', 'date_helper', 'page', 'error', 'users', 'tabs', 'menu');
+
+$autoload['language']  = array();
+
+/* Fin del archivo autoload.phtml */
+/* Ubicacion: /config/autoload.phtml */

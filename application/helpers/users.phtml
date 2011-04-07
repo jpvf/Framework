@@ -1,0 +1,35 @@
+<?php 
+
+/**
+ * Devuelve el id del usuario actual
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('get_user'))
+{
+    function get_user()
+    {
+        $acl = acl::getInstance();
+        return $acl->id;
+    }
+}
+
+/**
+ * Devuelve el id del perfil del usuario
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('get_user_level'))
+{
+    function get_user_level()
+    {
+        $acl = acl::getInstance();
+        return $acl->id_perfil;
+    }
+}

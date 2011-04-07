@@ -1,0 +1,80 @@
+<?php
+
+class my_model extends model
+{
+		
+	protected $tabla_id;
+	protected $tabla;
+	protected $tabla_active;
+	
+	protected $has_one;
+	protected $has_many;
+	protected $belongs_to;
+
+	function __construct($id = FALSE)
+	{
+		parent::__construct();
+
+		if ($id !== FALSE)
+		{			
+			$this->find($id);
+		}
+	}
+
+    function __get($key)
+    {
+    	return $this->attr->$key;
+    }
+
+    function __call($func, $args)
+    {
+    	$func = str_replace('find_by_', '', $func);
+    	$args = implode('', $args);
+    	return $this->_get_by_field($func, $args);
+    }
+
+    function find($id = 0)
+	{
+		$active = $this->_active();
+		$result = $this->db->where("{$this->tabla_id} = $id $active")->get($this->tabla);
+
+		if ($result->num_rows() > 0)
+		{
+			$this->attr = $result->row();
+		}
+		return $this;
+	}
+
+	function find_all($filtro = '', $orden = '')
+	{
+		if ( ! empty($filtro))
+		{
+			$this->db->where($filtro);
+		}
+
+		if ( ! empty($orden))
+		{
+			$this->db->order_by($orden);	
+		}
+
+		$active = $this->_active();
+		return $this->db->get($this->tabla);		
+	}
+
+	private function _get_by_field($field = '', $val = '')
+	{
+		if (is_string($val))
+		{
+			$val = "'$val'";
+		}
+
+		$active = $this->_active();
+		return $this->db->where("{$field} = $val $active")->get($this->tabla);
+	}
+
+	private function _active()
+	{
+		return ( ! empty($this->active)) ? "AND {$this->tabla_active} = 1" : '' ;		
+	}
+	
+}

@@ -1,0 +1,212 @@
+<?php 
+
+class session{
+
+    private static $session;
+    
+    function __construct()
+    {
+        self::$session = $this;
+        
+        $this->input = input::getInstance();
+        
+        if ( ! isset($_SESSION))
+        { 
+        	session_start();
+        }	
+        
+        if (isset($_SESSION['flashdata']['vieja']))
+        {
+            unset($_SESSION['flashdata']['vieja']);
+        }
+        
+        if (isset($_SESSION['flashdata']['nueva']))
+        {
+            $_SESSION['flashdata']['vieja'] = $_SESSION['flashdata']['nueva'];
+            unset($_SESSION['flashdata']['nueva']);
+        }
+    }
+    	
+	static function getInstance() 
+    { 
+        if ( ! self::$session) 
+        { 
+            self::$session = new session(); 
+        } 
+        return self::$session; 
+    }
+
+    private function _set_vars($vars = array(), $val = '', $flashdata = FALSE)
+    {
+         if ( is_string($vars) && ! empty($val))
+        {
+            $vars = array($vars => $val);
+        }
+        
+        if(count($vars) > 0)
+        {
+            foreach($vars as $key => $val)
+            {
+                if ($flashdata !== FALSE)
+                {
+                    $_SESSION['flashdata']['nueva'][$key] = $val; 
+                }
+                else
+                {
+                    $_SESSION[$key] = $val;
+                }
+            }
+        }
+    }
+
+   
+    function set_flashdata($flash = array(), $val = '')
+    {
+        $this->_set_vars($flash, $val, TRUE);
+
+        return $this;
+    }
+
+    function set($name = array(), $value = '')
+    {
+        $this->_set_vars($name, $value);
+        return $this;
+    }
+    
+    //MODIFICAR NOMBRE
+    function flashdata($key)
+    {
+        if ($_SESSION['flashdata']['vieja'][$key] === TRUE)
+        {
+        	return $_SESSION['flashdata']['vieja'][$key];
+        }
+        return FALSE;
+    }
+    
+	
+ 
+	function get($key = NULL, $key2 = NULL)
+	{
+        if (is_null($key))
+        {
+            return FALSE;
+        }
+
+        if (isset($_SESSION[$key][$key2]))
+        {
+           return $_SESSION[$key][$key2]; 
+        }
+
+        if (isset($_SESSION[$key]))
+        {
+           return $_SESSION[$key]; 
+        }
+
+        return FALSE;     
+	}
+	
+	function get_session()
+	{
+	   return $_SESSION;
+	}
+ 
+	function unset_var($key = NULL, $key2 = NULL)
+    {
+        if (is_null($key))
+        {
+            return FALSE;
+        }
+
+        if (isset($_SESSION[$key][$key2]))
+        {
+           unset($_SESSION[$key][$key2]); 
+        }
+
+        if (isset($_SESSION[$key]))
+        {
+           unset($_SESSION[$key]); 
+        }
+
+        return $this;     
+    }
+    
+
+    //----------------------------/
+	function session_reg($userdata = array())
+    {
+        $_SESSION["userdata"]   = $userdata;
+        $_SESSION['ip_address'] = $this->input->ip_address(); 
+    }
+
+    function session_end()
+    {
+    	$_SESSION = array();
+        session_unset();
+        session_destroy();
+        $this->clean_cache();
+        header("Location: /");
+        exit;
+    }
+
+
+    function clean_cache()
+    {
+        session_cache_limiter('private_no_expire');
+        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); 
+        header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); 
+        header("Cache-Control: private, no-store, no-cache, must-revalidate"); 
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
+    }
+    
+    public function valid_session()
+    {    	
+        $this->clean_cache();
+
+    	if ($this->get('userdata'))
+    	{
+    		$db = db::getInstance();
+    		
+            $query = $db->query('SELECT session_id 
+    		                     FROM users 
+    		                     WHERE id = ' . $_SESSION['userdata']['id']);
+    		
+	    	$session = $query->row(0,'array');
+
+	    	$session_cmp = strcmp($session['session_id'],session_id());
+    		
+	    	if ($session_cmp > 0 OR $session_cmp < 0)
+	    	{
+	    	    $this->session_end();
+    		}
+
+	    	if ($_SESSION['ip_address'] != $this->input->ip_address())
+	    	{
+	    	 	$this->session_end();
+	    	}	    	
+
+	    	return TRUE;
+    	}
+    
+    	return FALSE;
+    }
+    
+
+   
+    public function token($nombre = 'token', $token)
+    {
+    	$this->set($nombre, $token);
+    	return $token;
+    }
+    
+    public function check_token()
+    {
+    	if ($this->input->post('token') && isset($_SESSION['token']) && ($this->input->post('token') == $_SESSION['token']))
+    	{
+    		return true;
+    	}
+    	return false;
+    }
+    
+
+}

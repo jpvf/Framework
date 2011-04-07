@@ -1,0 +1,167 @@
+<?php 
+
+class acl{
+
+  	var $perms = array();    
+    var $id_usuario = 0;              
+    var $userRoles = array();  
+    private static $acl;
+    
+    public static function getInstance()
+    {
+    	if (!self::$acl) 
+        { 
+            self::$acl = new acl(); 
+        } 
+        return self::$acl; 
+    }
+    
+    function __construct()
+    {
+        $this->db         = db::getInstance();
+        $this->session    = session::getInstance();
+        
+        $this->id_usuario = $this->session->get('userdata','id');
+
+        if ($this->id_usuario > 0)
+        {
+            $this->_get_informacion_usuario();
+        }
+    }
+    
+    private function _get_informacion_usuario()
+    {
+        foreach ($_SESSION['userdata'] as $key => $val)
+        {
+            $this->$key = $val;
+        }
+    }
+    
+    function get_name()
+    {
+      return $this->first_name . ' ' . $this->last_name;  
+    }
+
+    private function _get_permiso($permiso, $recurso, $operacion)
+    {
+        return $this->db->query("SELECT perfiles_tipos_permisos.tipo, perfiles_tipos_permisos.id 
+                                    FROM operaciones_permisos
+                                    JOIN operaciones ON (operaciones.id = operaciones_permisos.id_operacion)
+                                    JOIN perfiles_permisos ON (operaciones_permisos.id_permiso = perfiles_permisos.id)
+                                    JOIN perfiles_tipos_permisos ON (operaciones_permisos.id_tipo = perfiles_tipos_permisos.id)
+                                    JOIN perfiles_recursos ON (operaciones_permisos.id_recurso = perfiles_recursos.id)
+                                    JOIN usuarios ON (operaciones_permisos.id_usuario = usuarios.id AND perfiles_permisos.id_perfil = usuarios.id_perfil)
+                                    JOIN perfiles ON (usuarios.id_perfil = perfiles.id)
+                                    WHERE id_usuario = {$this->id_usuario} AND id_permiso = $permiso AND operaciones.id = $operacion AND perfiles.id = {$this->id_perfil} 
+                                          AND usuarios.activo = 1 AND perfiles_tipos_permisos.activo = 1 AND perfiles_recursos.activo = 1 AND perfiles_recursos.id = $recurso");
+    }
+
+
+	private function _get_recurso($recurso)
+	{
+	    $this->db->where("nombre = '$recurso'");
+	    $result = $this->db->get('perfiles_recursos');
+	    $recurso = $result->row(0);
+	    return $recurso->id;
+	}
+	
+	private function _get_permiso_usuario($recurso, $usuario, $operacion, $adquisicion, $documento)
+	{
+	   $this->db->select('perfiles_permisos.id as id_permiso, perfiles_permisos.nombre as permiso');
+	   $this->db->from('usuarios_permisos');
+	   $this->db->join('usuarios', 'usuarios.id = usuarios_permisos.id_usuario');
+	   $this->db->join('perfiles_permisos', 'perfiles_permisos.id = usuarios_permisos.id_permiso');
+	   $this->db->where("usuarios.id = $usuario AND usuarios_permisos.id_operacion = $operacion AND usuarios_permisos.id_recurso = $recurso
+	                     AND usuarios_permisos.id_adquisicion = $adquisicion AND usuarios_permisos.id_documento = $documento");
+	   $results = $this->db->query();
+	   
+	   if ($results->num_rows() == 0)
+	   {
+	       return FALSE;
+	   }
+	   
+	   return $results->row();
+	}
+
+	function tiene_permiso($recurso = '', $operacion = 0, $adquisicion = 0, $documento = 0)
+	{
+	   if($recurso == ''){
+	       return FALSE;
+	   }
+	   
+	   $id_recurso = $this->_get_recurso($recurso);
+	   
+	   $permiso = $this->_get_permiso_usuario($id_recurso, $this->id, $operacion, $adquisicion, $documento);
+	  
+	   if($permiso === FALSE){
+	       return $permiso;
+	   }
+	   
+	   switch($permiso->id_permiso){
+	       case 1: 
+	           return TRUE;
+	           break;
+	       case 2:
+	           return FALSE;
+	           break;         
+	   }       
+	}
+	
+	function es_interno($usuario = 0)
+	{
+	   if($usuario == 0){
+	       return FALSE;
+	   }      
+	   
+	   $perfil = $this->_get_perfil($usuario);        
+	   
+	   if($perfil == 1){
+	       return TRUE;
+	   }
+	   
+	   return FALSE;
+	}
+	
+    function es_externo($usuario = 0)
+    {
+       if($usuario == 0){
+           return FALSE;
+       }
+       
+       $perfil = $this->_get_perfil($usuario); 
+       
+       if($perfil == 2){
+           return TRUE;
+       }
+       
+       return FALSE;
+    }
+    
+    function es_admin($usuario = 0)
+    {
+       if($usuario == 0){
+           return FALSE;
+       }
+       
+       $perfil = $this->_get_perfil($usuario); 
+       
+       if($perfil == -1){
+           return TRUE;
+       }
+       
+       return FALSE;
+    }
+	
+    
+    private function _get_perfil($usuario)
+    {
+        $this->db->where("id = $usuario");
+        $results = $this->db->get("usuarios", '1');
+        $usuario = $results->row(0);
+        return $usuario->id_perfil;
+    }
+	//function asignar_permisos($usuario = 0, $recurso = '', $permiso)
+	
+	
+
+}

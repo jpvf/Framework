@@ -1,0 +1,68 @@
+<?php 
+
+class error{
+
+	private static $error; 
+	
+	public function __construct()
+	{
+	
+	}
+	/**
+	 * Singleton para usar el objeto del controlador.
+	 * 
+	 * @return object
+	 */
+	public static function getInstance() 
+    { 
+        if (!self::$error) 
+        { 
+            self::$error = new error(); 
+        } 
+        return self::$error; 
+    }
+    
+	public function trigger_error($error = null, $args = null)
+	{
+	    $this->base = controller::getInstance();
+		if($error){
+			switch($error){
+				case 'model_missing':
+					echo 'No model was found with the name: ' . $args . '<br />';
+					break;		
+				case 'controller_missing':
+					echo 'No controller was found with the name: ' . $args . '<br />';
+					break;
+				case 'view_missing':
+					echo 'No view was found with the name: ' . $args . '<br />';
+					break;	
+				case '404':
+				    if (is_xhr())
+				    {
+				        echo 'Página no encontrada';
+				        exit;
+				    }
+					include(RUTA_APP . '/errors/404' . EXT);
+					exit;
+					break;
+		        case 'operacion':
+                    include(RUTA_APP . '/errors/operacion' . EXT);
+                    exit;
+                    break;
+		        case 'adquisicion':
+		            include(RUTA_APP . '/errors/adquisicion' . EXT);
+                    exit;
+                    break;
+		        default:
+                    include(RUTA_APP . '/errors/404' . EXT);
+                    exit;
+                    break;
+			}
+		}
+	
+	}
+
+
+
+
+}

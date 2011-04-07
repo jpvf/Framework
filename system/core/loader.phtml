@@ -1,0 +1,287 @@
+<?php if ( ! defined('BASE')) exit('Acceso directo prohibido');
+
+/**
+ * @author JuanPablo
+ * Clase para cargar las librerias, archivos de idioma y scripts
+ */
+class Loader{
+	
+	/**
+	 * @var objeto loader, usado en el singleton
+	 */
+	private static $loader; 
+    var $objects = array();
+    var $css_files = array();
+    var $js_files = array();
+    var $controlador = '';
+		
+	/**
+	 * constructor de la clase
+	 * @return void
+	 */
+	function __construct()
+	{
+        self::$loader = '';
+	}
+	
+	/**
+	 * Singleton para usar el objeto del loader.
+	 * @return objeto
+	 */
+	public static function getInstance() 
+    {        
+        if ( ! self::$loader) 
+        { 
+            self::$loader = new Loader(); 
+        } 
+        
+        return self::$loader; 
+    }
+	 
+	/**
+     * Cargar librerias quee llegan desde un array, si existe no la carga de nuevo
+     *
+     * @param  array|string
+     * @return true|false
+     */
+	function library($librerias = '')
+	{
+		if ($librerias == '')
+		{
+			return;		
+		}
+		
+		if (is_string($librerias))
+		{
+		    if (strpos($librerias, ','))
+		    {
+		       $librerias = explode(',', $librerias);
+		    }
+		    else
+		    {
+		       $librerias = array($librerias);
+		    }
+		}
+
+		foreach ($librerias as $libreria)
+		{	    
+		    $objeto = $libreria;
+		    		    
+		    if ( is_array($libreria))
+		    {
+		        $objeto    = array_values($libreria);		        
+                $objeto    = $objeto[0];
+                
+                $libreria  = array_keys($libreria); 
+                $libreria  = $libreria[0];     
+		    }
+		    
+		    $clase = $libreria;
+            
+		    
+		    if (strpos($libreria, '/') !== FALSE)
+            {
+                list($directorio, $clase) = explode('/', $libreria);
+            }
+            
+		    if (strpos($objeto, '/') !== FALSE)
+            {
+                list($directorio, $objeto) = explode('/', $libreria);
+            }
+		    
+
+
+		    $lib = RUTA_CORE . $libreria . EXT;
+
+			if ( ! file_exists($lib))
+			{
+				$lib = RUTA_LIBRERIAS_CORE . $libreria . EXT;
+
+				if ( ! file_exists($lib))
+				{
+				    $lib = RUTA_LIBRERIAS . $libreria . EXT;
+
+				    if ( ! file_exists($lib))
+				    {
+				        $lib = '';   
+				    }
+				}  
+			} 
+
+			if ($lib != '')
+			{
+    			include_once($lib);	
+    			    				
+    			if (class_exists($clase))
+    			{	
+    				$clase = ucfirst($clase);
+    			    $this->objects[$objeto] = new $clase;    			    
+    			    $controller = Controller::instance();
+    			    $controller->$objeto =& $this->objects[$objeto];
+    			}
+			}							
+		}
+		
+	}
+	
+	/**
+	 * Recibe el nombre de la vista y variables adicionales para incluirlas dentro de la vista;
+	 * la funcion extract se encarga de separar el array que llega y convertirlo a variables
+	 * con el mismo nombre de la llave dentro del array asociativo, si el archivo existe lo incluye sino 
+	 * envia un 404 y termina la ejecucion
+	 * 
+	 * @param $file
+	 * @param $data
+	 * @return unknown_type
+	 */
+	function view($file = '', $data = array(), $return = FALSE)
+	{
+
+	    $view = RUTA_VIEWS . $file . EXT;
+		if ( ! file_exists($view))
+		{
+			$view = RUTA_MODULOS . '/' . $this->controlador . '/views/' . $file . EXT;
+			
+			if ( ! file_exists($view))
+			{
+				return FALSE;
+			}
+		}
+		
+		$base = controller::getInstance(); 
+		
+		foreach ($base as $key => $val)
+		{
+			$this->$key = $val;
+		}
+		
+		if ($data != NULL)
+		{
+			extract($data);
+		}
+		
+		$compression = @ini_get('zlib.output_compression');
+							
+		if ($return === TRUE)
+		{
+		    if (extension_loaded('zlib') && $compression === FALSE)
+            {
+                if (isset($_SERVER['HTTP_ACCEPT_ENCODING']) AND strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE)
+                {
+                    ob_start('ob_gzhandler');
+                }
+            }
+            else
+            {
+                ob_start();
+            }
+		    include($view);
+            $contents = ob_get_contents();             
+            ob_end_clean();
+            return  $contents;
+		}
+		else
+		{
+		    if (extension_loaded('zlib') && $compression === FALSE)
+            {
+                if (isset($_SERVER['HTTP_ACCEPT_ENCODING']) AND strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE)
+                {
+                    ob_start('ob_gzhandler');
+                }
+            }
+            else
+            {
+                ob_start();
+            }
+            include($view);
+            ob_end_flush();
+		}
+		
+	}
+	
+	
+		/**
+	 * Recibe el nombre del archivo de un modelo, se le agregan datos necesarios
+	 * para crear la ruta absoluta.Luego de esto instancia el objeto del modelo, 
+	 * si el archivo existe lo incluye sino envia un 404 y termina la ejecucion
+	 * 
+	 * @param $model
+	 * @return void
+	 */
+	function model($model = '', $obj = '')
+	{
+		$file = RUTA_MODELS . $model . EXT;
+		
+		if (file_exists($file))
+		{
+			include_once($file);
+		}
+		else
+		{
+			$file = RUTA_MODULOS . $this->controlador . '/models/' . $model . EXT;
+
+			if ( ! file_exists($file))
+			{
+				$error = error::getInstance();
+				$error->trigger_error('model_missing', $model);
+			}
+			else
+			{
+				include_once($file);
+			}
+		}
+		
+		if (strpos($model, '/'))
+		{
+		    list($carpeta, $model) = explode('/', $model);
+		}
+		
+		$obj = ($obj == '') ? $model : $obj ;
+		$base = controller::getInstance(); 
+		$model = ucfirst($model);
+		$base->$obj = new $model;
+	}
+	
+	function helper($helper = '')
+	{
+	    if (is_string($helper))
+	    {
+	       if (strpos($helper, ',') !== FALSE)
+	       {
+	           $helper = explode(',', $helper);    
+	       }
+	       else 
+	       {
+	           $helper = array($helper);
+	       }
+	    }
+	    
+	    
+		foreach($helper as $file)
+		{
+			$helper = RUTA_HELPERS_CORE . $file . EXT;
+			
+			if (file_exists($helper))
+			{
+				include_once($helper);				
+			}
+			else
+			{
+				$helper = RUTA_HELPERS . $file . EXT;
+
+				if (file_exists($helper))
+				{
+					include_once($helper);
+				}
+			}
+
+		}
+
+		return $this;				
+	}
+	
+			
+}	
+
+/* End of file loader.phtml */
+/* Location: /system/loader.phtml */

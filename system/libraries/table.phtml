@@ -1,0 +1,177 @@
+<?php 
+
+class table
+{
+	private static $table;
+	var $table_open;
+	var $table_close;
+	var $table_class;
+	var $table_id;
+	
+	public static function getInstance()
+	{
+		if(!self::$table){
+			self::$table = new table();
+		}
+		return self::$table;
+	}
+	
+	public function __construct()
+	{
+		$this->headings_tag = 'td';
+		$this->table_rows = "";
+		$this->table_foot = "";
+		$this->table_head = "";		
+		$this->table_final = "";
+	}
+	
+	public function table_headings_tag($tag = '')
+	{
+		$tag = strtolower($tag);
+		if($tag != '' AND ($tag == 'td' OR $tag == 'th')){
+			$this->headings_tag = $tag;
+		}
+	}
+	
+	public function add_heading($rows = array(), $attr = array())
+	{
+	    if (is_string($rows))
+	    {
+	       $rows = explode(',', $rows);
+	    }
+	    
+		if (count($rows) > 0)
+		{
+			
+			$this->table_head .= "<tr"; 
+			
+			foreach ($attr as $key => $val)
+			{
+				$this->table_head .= " $key='$val'";
+			}	
+					
+			$this->table_head .=">\n";
+			
+				foreach($rows as $row)
+				{
+				 	$pos = strpos($row, '|');
+				 	 
+					 if ($pos === FALSE)
+					 {
+					 	 $this->table_head .= '<' . $this->headings_tag .'>';
+					 }
+					 else
+					 {
+					 	list($data, $td_attr) = explode('|', $row);
+						$this->table_head .= "<" . $this->headings_tag ." $td_attr>";
+						$row = $data;					 
+					 }
+					 
+					 $this->table_head .= $row;
+					 $this->table_head .= '</' . $this->headings_tag .'>';
+				}
+				
+			$this->table_head .= "\n</tr>\n";
+		}
+	}
+	
+	public function add_row($rows = array(), $attr = array())
+	{
+	    if (is_string($rows))
+        {
+           $rows = explode(',', $rows);
+        }
+        
+		$line = '';
+		if(count($rows) > 0)
+		{
+			if(count($attr)>0)
+			{
+				foreach($attr as $key => $val)
+				{
+					$line .= ' ' . $key . '="' . $val . '"';
+				}
+			}
+			
+		    $this->table_rows .= "<tr $line >\n";
+			foreach ($rows as $key => $val )
+			{
+				 $pos = strpos($val, '|'); 
+				 if ($pos === FALSE)
+				 {
+				 	 $this->table_rows .= '<td>';
+				 }
+				 else
+				 {
+				 	list($data, $td_attr) = explode('|', $val);
+					$this->table_rows .= "<td $td_attr>";
+					$val = $data;					 
+				 }
+				 
+				 $this->table_rows .= $val;
+				 $this->table_rows .= '</td>';
+			}
+		    $this->table_rows .= "\n</tr>\n";
+		}
+	}
+	
+	public function add_foot($rows = array(), $class = '')
+	{
+	    if (is_string($rows))
+        {
+           $rows = explode(',', $rows);
+        }
+        
+		if ($class != '')
+		{
+			$class = 'class="' . $class . '"';
+		}
+		
+		if (count($rows) > 0)
+		{
+		 $this->table_foot = "<tfoot  >\n";
+		 $this->table_foot .= "<tr>\n";
+			foreach ($rows as $row)
+			{
+				$pos = strpos($row, '|'); 
+				 if ($pos === FALSE)
+				 {
+				 	 $this->table_foot .= '<td>';
+				 }
+				 else
+				 {
+				 	list($data, $td_attr) = explode('|', $row);
+					$this->table_foot .= "<td $td_attr>";
+					$row = $data;					 
+				 }
+				 $this->table_foot .= $row;
+				 $this->table_foot .= '</td>';
+			}
+		 $this->table_foot .= "\n</tr>\n";
+		 $this->table_foot .= "\n</tfoot>\n";
+		}
+	}
+	
+	public function generate($attributes = array())
+	{
+			$this->table_final = "<table";
+			foreach($attributes as $key => $val){
+				$this->table_final .= ' ' . $key . '="' . $val . '"';
+			}
+			$this->table_final .= " >\n";
+			$this->table_final .= '<thead>';
+			$this->table_final .= $this->table_head;
+			$this->table_final .= '</thead>';
+			$this->table_final .= '<tbody>';
+			$this->table_final .= $this->table_rows;
+			$this->table_final .= '</tbody>';
+			$this->table_final .= $this->table_foot;
+			$this->table_final .= '</table>';
+			$this->table_head = '';
+			$this->table_rows = '';
+			$this->table_foot = '';
+
+		return $this->table_final;
+	}	
+
+}

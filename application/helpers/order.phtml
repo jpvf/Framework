@@ -1,0 +1,19 @@
+<?php 
+function session_order($field = ''){
+	$session = session::getInstance();
+	
+	if($field == ''){
+		return;
+	}
+	
+	if($session->get('project_order_type')){
+		if($session->get('project_order_type') == ' ASC'){
+			$session->set('project_order_type',' DESC');
+		}else{
+			$session->set('project_order_type',' ASC');
+		}
+	}else{
+		$session->set('project_order_type',' ASC');
+	}
+
+}

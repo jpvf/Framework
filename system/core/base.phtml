@@ -1,0 +1,16 @@
+<?php 
+
+/*
+ * Superclase del framework, es la clase madre de todas las demas.
+ */
+class base{
+
+    
+    private static $instance;
+    
+    public static function getInstance()
+    {
+        return controller::getInstance();
+    }
+    
+}	

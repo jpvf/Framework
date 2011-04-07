@@ -1,0 +1,510 @@
+<?php 
+/**
+ * Crea la etiqueta de apertura del formulario
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_open'))
+{
+	function form_open($url = '' , $attributes = array())
+	{
+		$action = ( strpos($url, '://') === FALSE) ? get_url() . '/' . $url : $url;
+
+		$form = '<form action="' . $action . '"';
+		if(!array_key_exists('method', $attributes)){
+				$form .= ' method="post"';
+		}
+		foreach($attributes as $key => $val){
+			$form .= ' ' . $key . '="' . $val . '"' ;
+		}
+		$form .= " >\n";
+		return $form;
+	}
+	}
+
+/**
+ * Crea la etiqueta de cierre del formulario
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_close'))
+{	
+	function form_close()
+	{
+		return "</form>\n";
+	}
+}
+
+/**
+ * Crea la etiqueta de apertura del formulario con el atributo enctype = multipart/form-data
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_open_multipart'))
+{	
+	function form_open_multipart($url = '', $attributes = array())
+	{
+		$attributes['enctype'] ="multipart/form-data";
+		return form_open($url, $attributes);
+	}
+}
+
+/**
+ * Crea un <input type="hidden">  solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_hidden'))
+{	
+	function form_hidden($attributes = array())
+	{
+		$input = '<input type="hidden"';
+		if(!array_key_exists('value', $attributes)){
+				$input .= ' value=""';
+		}
+		foreach($attributes as $key => $val){
+			$input .= ' ' . $key . '="' . $val .'"';
+		}	
+		$input .= " />\n";
+		return $input;
+	}
+}
+
+/**
+ * Crea un <input type="text">  solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_input'))
+{	
+	function form_input($attributes = array())
+	{
+		$input = '<input type="text"';
+		if(!array_key_exists('value', $attributes) ){
+				$input .= ' value=""';
+		}
+		foreach($attributes as $key => $val){
+			
+			$input .= ' ' . $key . '="' . $val .'"';
+		}	
+		$input .= " />\n";
+		return $input;
+	}
+}
+
+/**
+ * Crea un <input type="password">  solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_password'))
+{	
+	function form_password($attributes = array())
+	{
+		$input = '<input type="password"';
+		if(!array_key_exists('value', $attributes)){
+				$input .= ' value=""';
+		}
+		foreach($attributes as $key => $val){
+			
+			$input .= ' ' . $key . '="' . $val .'"';
+		}	
+		$input .= " />\n";
+		return $input;
+	}
+}
+
+/**
+ * Crea un <input type="file">  solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_upload'))
+{	
+	function form_upload($attributes = array())
+	{
+		$input = '<input type="file"';
+		if(!array_key_exists('value', $attributes)){
+				$input .= ' value=""';
+		}
+		foreach($attributes as $key => $val){
+			
+			$input .= ' ' . $key . '="' . $val .'"';
+		}	
+		$input .= " />\n";
+		return $input;
+	}
+	}
+
+/**
+ * Crea un <textarea>  solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_textarea'))
+{	
+	function form_textarea($attributes = array())
+	{
+		$textarea = '<textarea';
+		foreach($attributes as $key => $val){
+			
+			$textarea .= ' ' . $key . '="' . $val .'"';
+		}	
+		$textarea .= " >";
+		if(array_key_exists('html', $attributes)){
+				$textarea .= $attributes['html'];
+		}
+		$textarea .= "</textarea>\n";
+		return $textarea;
+	}
+}
+
+/**
+ * Crea un <select> con los atributos y <options> solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_select'))
+{	
+	function form_select($attributes = array(), $options = array(), $selected = '')
+	{
+		$select = '<select';
+		foreach($attributes as $key => $val){
+			$select .= ' ' . $key . '="' . $val . '"';
+		}
+		$select .= ">\n";
+		foreach($options as $value => $option){
+			$sel = '';
+			if($value == $selected){
+				$sel = 'selected="selected"';
+			}
+			$select .= '<option value="'. $value .'" ' . $sel . '>' . $option ."</option>\n";
+		}
+		$select .= "</select>\n";
+		return $select;
+	}
+}
+
+/**
+ * Crea un <input type="checkbox"> con los atributos solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_checkbox'))
+{	
+	function form_checkbox($attributes = array())
+	{
+		$checked = FALSE;
+		$check = '<input type="checkbox"';
+		if(key_exists('checked', $attributes)){
+			$checked = $attributes['checked'];
+			unset($attributes['checked']);
+		}
+		if(count($attributes) == 0){
+			if($checked === TRUE){
+				$check .= ' checked="checked"';					
+			}
+		}
+		foreach($attributes as $key => $val){
+			if($checked === TRUE){
+				$check .= ' checked="checked"';					
+			}
+			$check .= ' ' . $key . '="' . $val . '"';
+		}
+		$check .= " />\n";
+		return $check;
+	}
+}
+
+/**
+ * Crea un <input type="radio"> con los atributos solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_radio'))
+{	
+	function form_radio($attributes = array())
+	{
+		$radio = '<input type="radio"';
+		if(key_exists('checked', $attributes)){
+			$checked = $attributes['checked'];
+			unset($attributes['checked']);
+		}else{
+			$checked = FALSE;
+		}
+		foreach($attributes as $key => $val){
+			if($checked === TRUE){
+				$radio .= ' checked="checked"';					
+			}
+			$radio .= ' ' . $key . '="' . $val . '"';
+		}
+		$radio .= " />\n";
+		return $radio;
+	}
+}
+
+/**
+ * Crea un <input type="submit"> con los atributos solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_submit'))
+{	
+	function form_submit($attributes = array())
+	{
+		$submit = '<input type="submit"';
+		foreach($attributes as $key => $val){
+			$submit .= ' ' . $key . '="' . $val . '"';
+		}
+		$submit .= " />\n";
+		return $submit;
+	}
+}
+
+/**
+ * Crea un <label> con los atributos solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_label'))
+{	
+	function form_label($for = '', $html = '', $attributes = array())
+	{
+		$label = '<label for="'	. $for . '"';
+		if(count($attributes) > 0){
+			foreach($attributes as $key => $val){
+				$label .= ' ' . $key . '="' . $val . '"';
+			}
+		}
+		$label .= '>' . $html . '</label>';
+		return $label;
+	}
+}
+
+/**
+ * Crea un <input type="reset"> con los atributos solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_reset'))
+{	
+	function form_reset($attributes = array())
+	{
+		$submit = '<input type="reset"';
+		foreach($attributes as $key => $val){
+			$submit .= ' ' . $key . '="' . $val . '"';
+		}
+		$submit .= " />\n";
+		return $submit;
+	}
+}
+
+/**
+ * Crea un <button> con los atributos solicitados
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_button'))
+{	
+	function form_button($html = '',$attributes = array()){
+		$button = '<button';
+		foreach($attributes as $key => $val){
+			$button .= ' ' . $key . '="' . $val .'"';
+		}		
+		$button .= '>' . $html . '</button>';
+		return $button;		
+	}
+}
+
+/**
+ * Crea una etiqueta anchor, solo es necesario agregar en el href los segmentos despues
+ * del index.phtml
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('anchor'))
+{	
+	function anchor($href = '', $text = '', $attributes = array(), $external = FALSE)
+	{
+		$anchor = '<a';
+		$base = get_url();
+		if($external === TRUE){
+		   $base = ''; 
+		}  
+		$anchor .= ' href ="' . $base . $href . '"';
+		foreach($attributes as $key => $val){
+			$anchor .= ' ' . $key . '="' . $val .'"';	
+		}
+		$anchor .= '>';
+		$anchor .= $text;
+		$anchor .= '</a>';
+		return $anchor;
+	}
+}
+
+/**
+ * Muestra las etiquetas <br>, recibe un parametro entero para el número de repeticiones
+ * del <br>
+ *
+ * @access  public
+ * @param   integer
+ * @return  string
+ */
+
+if( ! function_exists('br'))
+{	
+	function br($repeat = 1)
+	{
+	    $br = '';
+	    for($i = 0;$i < $repeat; $i++){
+	       $br .= '<br />';
+	    }
+		return $br;
+	}
+}
+
+/**
+ * Muestra los errores de la validacion.
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_error'))
+{	
+	function form_error($field = '', $prefix = '', $suffix = '')
+    {
+        if (FALSE === ($OBJ = form_validation::getInstance()))
+        {
+            return '';
+        }
+
+        return $OBJ->error($field, $prefix, $suffix);
+    }
+}
+
+/**
+ * Escribe los valores dentro de un campo despues de una validacion
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('set_value'))
+{   
+    function set_value($field = '', $default = '')
+    {
+        if (FALSE === ($OBJ = form_validation::getInstance()))
+        {
+            if ( ! isset($_POST[$field]))
+            {
+                return $default;
+            }
+            return form_prep($_POST[$field], $field);
+        }
+        return form_prep($OBJ->set_value($field, $default), $field);
+    }
+}
+
+/**
+ * Ayuda a limpiar los datos para ser usados dentro de los formularios o html en general, 
+ * por ejemplo dentro de un input:
+ * 
+ * <input type="text" value="&quot; texto &quot;" >
+ *
+ * @access  public
+ * @param   string
+ * @return  string
+ */
+
+if( ! function_exists('form_prep'))
+{    
+    function form_prep($str = '', $field_name = '')
+    {
+        static $prepped_fields = array();
+
+        
+        
+        if (is_array($str))
+        {
+            foreach ($str as $key => $val)
+            {
+                $str[$key] = self::form_prep($val);
+            }
+
+            return $str;
+        }
+
+        if ($str === '')
+        {
+            return '';
+        }
+
+        if (isset($prepped_fields[$field_name]))
+        {
+            return $str;
+        }
+        
+        $str = htmlspecialchars($str);
+        $str = str_replace(array("'", '"'), array("&#39;", "&quot;"), $str);
+
+        if ($field_name != '')
+        {
+            $prepped_fields[$field_name] = $str;
+        }
+        
+        return $str;
+    }
+}	
+	
+	

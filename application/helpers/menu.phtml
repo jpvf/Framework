@@ -1,0 +1,7 @@
+<?php 
+
+function menu_selected($item = '', $default = FALSE)
+{
+	$uri = uri::getInstance();
+	return ($uri->get(1) == $item OR ($uri->get(1) == '' && $default === TRUE)) ? ' class="selected"' : '';
+}

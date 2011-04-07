@@ -1,0 +1,26 @@
+<?php 
+
+class MY_controller extends Controller
+{
+    var $titulo = '';
+    
+    function __construct()
+    {
+        parent::__construct();
+    }
+
+
+    function before()
+    {    
+		if ( ! $this->session->valid_session() && $this->uri->get(1) != 'login')
+		{	
+			redirect(get_url() . '/login');
+		}
+    }
+
+    function after()
+    {
+
+    }
+    
+}

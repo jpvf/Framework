@@ -1,0 +1,52 @@
+<?php
+/*
+ * Archivo de configuracion de los hooks.
+ *  
+ * Son funciones o clases que se pueden llamar en cierto punto del sistema, pre_controller,
+ * pos_controller.
+ * 
+ * deben tener la siguiente estructura:
+ * 
+ * -Para uno solo
+ * $hook['tipo_controller'] = array('class'    => '',
+ *                                  'function' => '',
+ *                                  'filename' => '',
+ *                                  'filepath' => '',
+ *                                  'params'   => array()
+ *                                 );   
+ *                                 
+ * -Para multiples funciones o clases
+ * $hook['tipo_controller'][] = array('class'    => '',
+ *                                  'function' => '',
+ *                                  'filename' => '',
+ *                                  'filepath' => '',
+ *                                  'params'   => array()
+ *                                 );      
+ *                                 
+ * Si es simplemente una funcion es necesario quitar el indice 'class' del array
+ */
+                                   
+
+$hook['pre_controller'] = array(
+                                'function' => 'auth',
+                                'filename' => 'auth',
+                                'filepath' => 'hooks'
+                                );        
+
+ /*     
+  * $hook['post_controller'] = array(
+                                'function' => 'mysql_time',
+                                'filename' => 'load_scripts',
+                                'filepath' => 'hooks'
+                                );                    
+$hook['post_controller'] = array(
+                                'class'    => '',
+                                'function' => '',
+                                'filename' => '',
+                                'filepath' => '',
+                                'params'   => array()
+                                );                          
+*/                           
+
+/* Fin del archivo hooks_config.phtml */
+/* Ubicacion: /config/hooks_config.phtml */

@@ -1,0 +1,128 @@
+<?php 
+
+class hooks 
+{
+	private static $obj;
+	
+	public function __construct()
+	{
+		$this->in_progress = FALSE;
+		
+	}
+	
+	public static function getInstance()
+	{	
+		if(!self::$obj){
+			self::$obj = new hooks();	
+		}
+		return self::$obj;
+	}
+	
+
+	public function initialize($type = '')
+	{		
+		include(RUTA_CONFIG . 'hooks' . EXT);
+
+		if (!isset($hook) OR !is_array($hook))
+		{
+			return;
+		}
+
+		$this->hooks = $hook;
+		
+		if (trim($type) != '')
+		{
+			$this->type = $type;
+		}
+
+		$this->call_hook();
+	}
+	
+	public function call_hook()
+	{
+		if ( ! isset($this->hooks[$this->type]))
+		{
+			return;
+		}
+
+		if (isset($this->hooks[$this->type][0]) AND is_array($this->hooks[$this->type][0]))
+		{			
+			foreach ($this->hooks[$this->type] as $val)
+			{				
+				$this->run($val);
+			}
+		}
+		else
+		{
+			$this->run($this->hooks[$this->type]);
+		}
+
+	}
+	
+	public function run($hook = array())
+	{
+		if($this->in_progress === TRUE OR empty($hook)){
+			return;
+		}
+		
+		$params   = '';
+		$class    = FALSE;
+		$function = FALSE;
+		
+		$this->in_progress = TRUE;
+
+		$var = $hook;
+		
+		if(isset($var['class'])){
+			$class = $var['class'];
+		}
+		
+		if(isset($var['filepath'])){
+			$path = $var['filepath'];
+		}
+		
+		if(isset($var['filename'])){
+			$filename = $var['filename'];
+		}
+		
+		if(isset($var['function'])){
+			$function = $var['function'];
+		}
+		
+		if(isset($var['params'])){
+			$params = $var['params'];
+		}
+		
+		$path = PATH . '/' . $path . '/' . $filename . EXT;
+		
+		if(!file_exists($path)){
+			return FALSE;
+		}			
+
+		if($class === FALSE && $function === FALSE){
+			return FALSE;
+		}
+
+		if($class !== FALSE){
+
+			if(!class_exists($class)){
+				include($path);
+			}
+			
+			$obj = new $filename;
+			$obj->$function($params);
+		
+		}else{
+			
+			if (!function_exists($function)){
+				require($path);
+			}	
+			$function($params);
+						
+		}			
+
+		$this->in_progress = FALSE;
+	}
+
+
+}

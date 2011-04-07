@@ -1,0 +1,222 @@
+<?php if ( ! defined('BASE')) exit('Acceso directo prohibido');
+
+class Router {
+
+	private static $router;
+	
+	public static function getInstance()
+	{
+		if ( ! self::$router)
+		{
+			self::$router = new router();
+		}
+		return self::$router;
+	}
+	
+	function __construct()
+	{
+		include(RUTA_CONFIG . 'config' . EXT);
+		include(RUTA_CONFIG . 'routes' . EXT);
+		$this->routes =& $route;
+		$this->config =& $config;
+		$this->input = input::getInstance();
+		$this->load  = loader::getInstance();
+		$this->uri   = uri::getInstance();
+		$this->class_c = '';
+		$this->directorio = '';
+	}
+	
+	function get_controller()
+	{
+	    include(RUTA_CONFIG . 'routes.phtml');    
+		    
+	    $uri = $this->uri->fetch_uri();
+
+		if ( ! $this->uri->uri_string)
+        {
+            $uri = $this->_set_default_controller();
+        }
+
+        $segments = $this->_rutas($uri);
+                       
+	    $this->controlador = '';
+	    
+        if (count($segments) == 0)
+        { 
+            if ($this->directorio != '')
+            {
+               $this->controlador .= $this->directorio . '/';                   
+            }  
+            $this->set_clase($this->config['default_controller']);
+            $this->uri->rsegments[0] = $this->clase;
+            $this->uri->segments[0] = $this->clase;
+        }
+        else
+        {  
+            
+            if($this->directorio != '')
+            {
+               $this->controlador .= $this->directorio . '/';                   
+            }
+            
+            $clase = $segments[0];
+            $this->set_clase($clase);                
+        }
+
+        $metodo = (isset($segments[1])) ? $segments[1] : FALSE;
+
+        if ($metodo)
+        {
+            $this->set_metodo($metodo);
+        }
+        else
+        {
+            $this->set_metodo('index');
+        }
+        
+        $this->controlador .= $this->clase;
+	
+		return $this->_load_controller();
+	}
+	
+	function _set_default_controller()
+	{ 
+	    if (strpos($this->config['default_controller'], '/'))
+        {
+            return explode('/', $this->config['default_controller']);
+        }
+        else
+        {
+            return array($this->config['default_controller'], 'index');
+        }
+	}
+	
+	function _rutas($segments = array())
+	{
+	    if (count($segments) == 0)
+	    {
+            $segments = explode('/', $this->config['default_controller']);
+        }
+        
+	    $uri = array();
+	    
+	    foreach ($segments as $key => $val)
+	    {	    
+	       if (!empty($val))
+	       {	           
+	           $uri[] = $val;	           
+	       }
+	       
+	    }	    
+
+	    $segments = $uri;
+	    
+	    $uri = implode('/', $segments);
+        if (isset($this->routes[$uri]))
+        {
+            return $this->_validar_peticion(explode('/', $segments));
+        }
+        
+        foreach ($this->routes as $key => $val)
+        {
+            $key = str_replace(':letra', '.+', str_replace(':numero', '[0-9]+', $key));
+
+            if (preg_match('#^'.$key.'$#', $uri))
+            {
+                if (strpos($val, '$') !== FALSE AND strpos($key, '(') !== FALSE)
+                {
+                    $val = preg_replace('#^'.$key.'$#', $val, $uri);        
+                                
+                }
+                $this->uri->rsegments = explode('/', $val);
+                return $this->_validar_peticion(explode('/', $val));
+            }
+        }
+        
+        $this->uri->rsegments = explode('/', $uri);
+        return $this->_validar_peticion($segments);
+	}
+		
+	function _validar_peticion($segments = array())
+	{
+        if (count($segments) == 0)
+        {
+            $file = $this->config['default_controller'];
+            $this->controller_file = RUTA_MODULOS . $file . '/controllers/' . $file .EXT;
+            return $segments;
+        }
+
+        if (file_exists( RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[0] .EXT))
+        {
+            $this->directorio = '';
+            $this->controller_file = RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[0] .EXT;
+            return $segments; 
+        }
+
+        if (file_exists(RUTA_CONTROLLERS . $segments[0] .EXT))
+        {
+            $this->directorio = '';
+            $this->controller_file = RUTA_CONTROLLERS . $segments[0] .EXT;
+            return $segments; 
+        }
+
+        if (is_dir(RUTA_CONTROLLERS . $segments[0]))
+        {
+            $this->set_directorio($segments[0]);
+            $segments = array_slice($segments, 1);
+
+            if (count($segments) > 0)
+            {
+                if ( ! file_exists(RUTA_CONTROLLERS . $this->directorio . '/' . $segments[0].EXT))
+                {
+                    mostrar_error();
+                }
+
+                 $this->controller_file = RUTA_CONTROLLERS . $this->directorio . '/' . $segments[0].EXT;
+            }
+            else
+            {
+                $this->set_metodo('index');
+                
+                if ( ! file_exists(RUTA_CONTROLLERS . $this->directorio . '/' . $this->config['default_controller']  . EXT))
+                { 
+                    $this->directorio = '';
+                    return array();
+                }
+
+              	$this->controller_file = RUTA_CONTROLLERS . $this->directorio . '/' . $this->config['default_controller']  . EXT;
+                
+            }
+            
+            return $segments;
+        }
+
+		mostrar_error();
+	}
+	
+	function set_directorio($dir = '')
+	{
+	   $this->directorio = $dir;
+	}
+		
+	function set_metodo($metodo = '')
+	{
+	   $this->metodo = $metodo;
+	}
+	
+	function set_clase($clase = '')
+	{
+	   
+	   $this->clase = $clase;
+	}
+	
+	function _load_controller(){
+	    return array('controlador' => $this->controlador, 
+	                 'clase'       => $this->clase, 
+	                 'metodo'      => $this->metodo, 
+	                 'directorio'  => $this->directorio,
+	                 'archivo'	   => $this->controller_file);
+		
+	}
+
+}

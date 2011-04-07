@@ -1,0 +1,335 @@
+<?php 
+include_once(RUTA_CORE . 'db/driver' . EXT);
+
+class db extends driver
+{
+
+    var $result;
+    private static $db; 
+    protected $result_object;
+
+    var $join     = array();
+    var $select   = '';
+    var $from     = '';
+    var $where    = '';
+    var $group_by = '';
+    var $having   = '';
+    var $order_by = '';
+    var $limit    = '';   
+            
+    public static function getInstance() 
+    { 
+        if (!self::$db) 
+        { 
+            self::$db = new db(); 
+        } 
+        return self::$db; 
+    }
+    
+    public function __construct()
+    {
+        parent::__construct();
+    }   
+    
+ 
+    public function resource()
+    {
+        return $this->rows;
+    }
+    
+    public function affected_rows()
+    {
+        return mysql_affected_rows();
+    }
+
+    public function count_queries()
+    {
+        return $this->counter;
+    }
+    
+    public function time_queries()
+    {
+        return $this->time;
+    }   
+
+    function get($table = '', $limit = '', $where = '')
+    {
+       if ($table == '')
+       {
+           return;
+       }
+       
+       if ($this->select == '')
+       {        
+        $this->select('*');
+       }
+       
+       $this->from($table);
+       
+       if ($where != '')
+       {
+           $this->where($where);
+       }
+       
+       if ($limit != '')
+       {
+           $this->limit($limit);
+       }
+       
+       return $this->query();
+    }
+    
+    function insert($array = array(), $tabla = '')
+    {
+        if(count($array)>0){
+            $sql = "INSERT INTO $tabla \n";
+            $sql .= "(" . implode(',',array_keys($array)) . ") \n";
+            $sql .= "VALUES \n";
+            $sql .= "('" . implode("','", $array) . "') \n";
+            
+            $this->_reset_query();
+            
+            return $this->query($sql);
+        }
+        return;
+    }
+    
+    function update($array = array(), $tabla = '', $where = '')
+    {
+        if(count($array)>0){        
+            
+            $values = array();
+
+            $sql = "UPDATE $tabla \n SET ";
+
+            foreach ($array as $key => $val)
+            {
+                $values[] = " $key = '$val'";
+            }
+            
+            $sql .= implode(", \n", $values);
+            
+            if ($where !== '')
+            {
+                $this->where($where);
+                $sql .= " \n WHERE " . $this->where . "\n";
+            }
+            
+            $this->_reset_query();
+            
+            return $this->query($sql);
+        }   
+        return;
+    }
+    
+    function select($select = '*')
+    {       
+        if (is_string($select))
+        {
+            if (strpos($select,',') !== FALSE)
+            {
+                $select = explode(',', $select);
+            }
+            else{
+                $select = array($select);
+            }
+        }
+        
+        $select = implode(", ", $select);
+        $this->select = $select;
+        return $this;
+    }    
+
+    function from($from = '')
+    {
+        $this->from = $from;
+        return $this;
+    }
+
+    function join($join_table = '', $on = '', $type = '')
+    {        
+        if ($join_table != '')
+        {
+            $this->join[] = strtoupper($type) . " JOIN $join_table ON ( $on )";
+        }     
+        return $this;         
+    }
+
+    function where($where = '')
+    {
+        if (is_string($where))
+        {                    
+            if ($this->where == '')
+            {
+                $this->where = "";
+            }
+            
+            $this->where .= $where;
+                       
+        }        
+        if (is_array($where))
+        {
+            $vars = array();
+            
+            foreach ($where as $key => $value)
+            {
+                if ( ! is_numeric($value))
+                {
+                     $value = "'$value'";                       
+                }
+
+                if ( ! $this->_tiene_operador($key) )
+                {
+                    $key = "$key =" ;                  
+                }
+
+                $vars[] = "$key $value";
+            }
+            $this->where = implode(' AND ', $vars);    
+        }
+        return $this;
+    }    
+
+    
+
+    function group_by($group_by = '')
+    {
+        if ( ! is_array($group_by))
+        {
+            if (strpos($group_by, ',') !== FALSE)
+            {
+                $group_by = explode(',', $group_by);
+            }
+            else
+            {
+                $group_by = array($group_by);
+            }       
+        }        
+
+        $this->group_by = implode(",", $group_by);     
+        return $this;   
+    }    
+
+    function order_by($order_by = '', $order = '')
+    {
+        if ( ! is_array($order_by))
+        {
+
+            if (strpos($order_by, 'ASC') !== FALSE)
+            {
+                $order_by = str_ireplace('ASC', '', $order_by);                
+            }
+
+            if (strpos($order_by, 'DESC') !== FALSE)
+            {
+                $order    = 'DESC';
+                $order_by = str_ireplace('DESC', '', $order_by);                
+            }
+
+            if (strpos($order_by, ',') !== FALSE)
+            {
+                $order_by = explode(',', $order_by);
+            }
+            else
+            {
+                $order_by = array($order_by);
+            }       
+        }        
+
+        $this->order_by = implode(",", $order_by) . "$order"; 
+        return $this;
+    }
+
+    
+
+    public function having($having)
+    {
+        $this->having = $having;
+        return $this;
+    }   
+
+    public function limit($limit = '', $offset = '')
+    {        
+        if ($offset != '')
+        {
+            $offset = ', ' . $offset;
+        }
+
+        $this->limit = "$limit $offset";
+
+        return $this;
+    }
+
+    protected function get_sql()
+    {
+        $this->sql = '';
+
+        if ($this->select != '')
+        {
+            $this->sql .= "SELECT {$this->select} \n ";
+        }
+
+        if ($this->from != '')
+        {
+            $this->sql .= "FROM {$this->from} \n";
+        }
+
+        if ($this->join != '')
+        {
+            $this->sql .= implode("\n", $this->join ) . "\n";
+        }
+           
+        if ($this->where != '')
+        {
+            $this->sql .= "WHERE {$this->where} \n";
+        }
+
+        if ($this->group_by != '')
+        {
+            $this->sql .= "GROUP BY {$this->group_by} \n ";
+        }
+
+        if ($this->having != '')
+        {
+            $this->sql .= "HAVING {$this->having} \n";
+        }
+
+        if ($this->order_by != '')
+        {
+            $this->sql .= "ORDER BY {$this->order_by} \n";
+        }
+
+        if ($this->limit != '')
+        {
+            $this->sql .= "LIMIT {$this->limit} \n";
+        }
+        
+        $this->_reset_query();
+
+        return  $this->sql;
+    }
+
+    private function _reset_query()
+    {               
+        $this->select = '';
+        $this->from = '';
+        $this->where = '';
+        $this->join = '';
+        $this->group_by = '';
+        $this->having = '';
+        $this->order_by = '';
+        $this->limit = '';        
+    }
+
+    private function _tiene_operador($str)
+    {
+        $str = trim($str);
+
+        if ( ! preg_match("/(\s|<|>|!|=|is null|is not null)/i", $str))
+        {
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+}

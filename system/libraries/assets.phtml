@@ -1,0 +1,77 @@
+<?php
+
+class Assets
+{
+
+	private static $css;
+	private static $js;
+	
+	static function css($css = '')
+	{		
+	   if (is_string($css))
+        {           
+           if (strpos($css, ',') !== FALSE)
+           {
+               $css = explode(',', $css);    
+           }
+           else 
+           {
+               $css = array($css);
+           }
+        }
+        
+		
+		foreach($css as $row){
+			
+		    $path = RUTA_CSS . $row  . CSS;
+			
+			if ( ! file_exists($path))
+			{
+				return;
+			}
+
+			$src = '/assets/css/' . $row . '.css';
+			self::$css .= "<link type='text/css' href='$src' rel='stylesheet' /> \n \t";
+		}
+	}
+	
+	static function show_css()
+	{  
+		return (isset(self::$css) && ! empty(self::$css)) ? self::$css : '';
+	}
+
+	static function js($script = '')
+	{		
+		if(is_string($script))
+		{		    
+		   if (strpos($script, ',') !== FALSE)
+           {
+               $script = explode(',', $script);    
+           }
+           else 
+           {
+		       $script = array($script);
+           }
+		}
+		
+		foreach($script as $row)
+		{
+			$path = RUTA_JS . $row  . JS;
+
+			if ( ! file_exists($path))
+			{
+				return;
+			}
+			
+			$src = '/assets/js/' . $row . JS;
+			self::$js .= "<script type='text/javascript' src='$src' ></script> \n \t";	
+		}	
+	}
+	
+	static function show_js()
+	{
+		return (isset(self::$js) && ! empty(self::$js)) ? self::$js : '';
+	}
+	
+
+}

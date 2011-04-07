@@ -1,0 +1,58 @@
+<?php 
+
+class breadcrumbs 
+{
+
+    function __construct()
+    {
+        include(RUTA_CONFIG . 'breadcrumbs' . EXT);  
+
+        foreach ($breadcrumbs as $key => $val)
+        {
+            $this->$key = $val;
+        }
+        
+        $this->line = array();
+    }
+    
+    
+    function add($titulo = '', $href = '')
+    {
+        if ($titulo === '')
+        {
+            return FALSE;
+        }
+        
+        $this->line[] =  ($href !== '') ? anchor($href, $titulo) : $titulo ;
+        
+        return $this;
+    }
+    
+    function generate()
+    {
+        if ($this->class)
+        {
+            $class = " class='{$this->class}'";
+        }
+        
+        $inicio = anchor('/', $this->inicio);
+        
+        $return = "<ul{$class}>";
+                
+        $return .= "<li>$inicio</li>";
+        
+        $return .= '<li> / </li>';
+        
+        foreach ($this->line as $line)
+        {
+            $return .= '<li>' . $line . '</li>'; 
+            $return .= '<li> / </li>';       
+        }    
+                
+        $return = substr($return, 0, -12);
+        
+        $return .= '</ul>';
+        
+        return $return;
+    }
+}

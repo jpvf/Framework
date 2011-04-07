@@ -1,0 +1,126 @@
+<?php
+//Nombre de la carpeta de la applicacion
+$application_folder = 'application';
+
+//Variable para evitar acceso directo por url cuando no se ingresa por este script
+define('BASE',1);
+define('PATH',$_SERVER['DOCUMENT_ROOT']);
+define('RUTA_SISTEMA', PATH . '/system');
+define('RUTA_CORE', RUTA_SISTEMA . '/core/');
+define('RUTA_LIBRERIAS_CORE', RUTA_SISTEMA . '/libraries/');
+define('RUTA_HELPERS_CORE', RUTA_SISTEMA . '/helpers/');
+define('RUTA_LOGS', PATH . '/logs/');
+define('RUTA_APP', PATH . '/' . $application_folder);
+define('RUTA_CONFIG', RUTA_APP . '/config/');
+define('RUTA_LIBRERIAS', RUTA_APP . '/libraries/');
+define('RUTA_LENGUAJE', RUTA_APP . '/lang_files/');
+define('RUTA_HELPERS', RUTA_APP . '/helpers/');
+define('RUTA_MODULOS', RUTA_APP . '/modules/');
+define('RUTA_CONTROLLERS', RUTA_APP . '/controllers/');
+define('RUTA_VIEWS', RUTA_APP . '/views/');
+define('RUTA_MODELS', RUTA_APP . '/models/');
+define('RUTA_JS', PATH . '/assets/js/');
+define('RUTA_CSS', PATH . '/assets/css/');
+define('EXT', '.phtml');
+define('JS', '.js');
+define('CSS', '.css');
+
+//Incluye el cargador y el archivo config para autocargar archivos
+include(RUTA_CORE . 'loader' . EXT);
+include(RUTA_CONFIG . 'autoload' .EXT); 
+
+//Carga la clase base, la clase de controlador y la clase de modelos
+
+
+include(RUTA_CORE . 'controller' . EXT);
+include(RUTA_CORE . 'base' . EXT);
+include(RUTA_CORE . 'model' . EXT);
+include(RUTA_LIBRERIAS_CORE . 'assets' . EXT);
+
+$sistema = array( 'input', 'uri', 'router',  'session',
+                  'db/active_record', 'db/db', 'error'  ,'language');
+//Utiliza una funcion para autocargar librerias.
+$load = loader::getInstance();
+$load->library($sistema);
+$load->helper($autoload['helpers']);
+$load->library($autoload['libraries']);
+
+
+//incluye la configuracion
+include(RUTA_CONFIG . 'config' . EXT);
+
+//Desde el config, si se quiere limpiar globales por defecto.
+if ($config['sanitize_globals'])
+{
+	$input = input::getInstance();
+	$input->_sanitize_globals();
+}
+
+//desde el config si esta o no en produccion, ademas crea un handler de errores personalizado
+if ($config['debug'])
+{
+	set_error_handler("error_handler");
+}
+else
+{
+	error_reporting(0);
+}
+
+if (file_exists(RUTA_LIBRERIAS . 'my_controller' . EXT))
+{
+    include_once(RUTA_LIBRERIAS . 'my_controller' . EXT);
+}
+
+if (file_exists(RUTA_LIBRERIAS . 'my_model' . EXT))
+{
+    include_once(RUTA_LIBRERIAS . 'my_model' . EXT);
+}
+
+
+$router      = router::getInstance();
+$uri         = uri::getInstance();
+$controlador = $router->get_controller();
+
+//Si llega hasta acá es porque el controlador existe en alguna parte.
+
+include($controlador['archivo']);
+
+$clase = $controlador['clase'];
+
+$load->controlador = $controlador['clase'];
+
+if (strpos($clase, '/'))
+{
+    $clase = explode('/', $clase);
+    $clase = ucwords($clase[1]);
+}
+
+$clase = new $clase;
+
+if (method_exists($clase, $controlador['metodo']) && is_callable(array($clase,$controlador['metodo'])))
+{       
+    if ($controlador['directorio'] == '')
+    {
+      $vars = array_slice($uri->rsegments, 2);
+    }
+    else
+    {
+      $vars = array_slice($uri->rsegments, 3);
+    }
+
+    if (method_exists($clase, 'before'))
+    {
+        call_user_func_array(array(&$clase, 'before'), $vars);    
+    }
+
+    call_user_func_array(array(&$clase, $controlador['metodo']), $vars);   
+    
+    if (method_exists($clase, 'after'))
+    {
+        call_user_func_array(array(&$clase, 'after'), $vars);    
+    }           
+}
+else
+{
+    mostrar_error();
+}
