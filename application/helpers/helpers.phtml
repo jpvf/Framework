@@ -111,8 +111,8 @@ function send_mail($email = '' , $name = '', $subject = '', $alt = '', $body = '
 	
 	function item($item = null)
 	{
-		include(RUTA_CONFIG . 'config' .EXT);
-		return $config[$item];
+		$config = config::getInstance();
+		return $config->get($item);
 	}
 	
 	function create_hash($id = '')

@@ -7,16 +7,16 @@
  */
 class Controller{
 
-	private static $instance; 
+  private static $instance; 
     
-	public static function getInstance()
-    {
-        if ( ! self::$instance)
-        {
-            self::$instance = new Controller();
-        }
-        return self::$instance;
-    }
+  public static function getInstance()
+  {
+      if ( ! self::$instance)
+      {
+          self::$instance = new Controller();
+      }
+      return self::$instance;
+  }
 	/**
 	 * Inicia objetos y librerias para 
 	 * la clase hija.
@@ -40,6 +40,7 @@ class Controller{
        
        $this->session  = session::getInstance();
        $this->language = language::getInstance();
+       
        if (isset($this->language))
        {
            $this->language->load($this->session->get('user_lang'));

@@ -1,0 +1,92 @@
+<?php
+
+class Config 
+{
+	
+	private static $instance; 
+    
+	public static function getInstance()
+    {
+        if ( ! self::$instance)
+        {
+            self::$instance = new Config();
+        }
+        return self::$instance;
+    }
+    
+    function load($files = '')
+    {
+    	if (is_string($files))
+    	{
+    		if (strpos($files, ','))
+    		{    			
+    			$files = explode(',' , $files);
+    		}
+    		else
+    		{
+    			$files = array($files);
+    		}
+    	}
+
+    	foreach ($files as $file)
+    	{
+    		$file = trim($file);
+    		$config_file = RUTA_CONFIG . $file . EXT;
+
+    		if (file_exists($config_file))
+    		{
+    			include($config_file);
+
+    			$this->$file  = (object) ${$file};
+
+    			foreach ($this->$file as $key => $val)
+    			{
+    				$this->config->$key = $val;
+    			}
+    		} 		
+
+    	}
+
+    	return $this;
+    }
+
+    function get($key = '')
+    {
+    	return $this->config->$key;
+    }
+
+    function set($file = array(), $values = '')
+    {
+    	if (is_string($file))
+    	{
+    		$file = array($file => $values);
+    	}
+
+		foreach ($file as $key => $val)
+		{
+			$this->config->$key = $val;
+		}
+
+    	return $this;
+    }
+
+    function get_group($group = '')
+    {
+    	return $this->$group;
+    }
+
+    function set_group($group = array(), $name = '')
+    {
+    	if ($name == '')
+    	{
+    		return FALSE;
+    	}
+
+    	$this->$name = $group;
+
+    	$this->set($group);
+
+    	return $this;
+    }
+
+}

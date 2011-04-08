@@ -2,7 +2,7 @@
 
 class pagination{
 
-	private static $pagination; 
+	private static $instance; 
 	var $page;
 	public function __construct()
 	{
@@ -27,16 +27,16 @@ class pagination{
 	
 	public static function getInstance() 
     { 
-        if (!self::$pagination) 
+        if ( ! self::$instance) 
         { 
-            self::$pagination = new pagination(); 
+            self::$instance = new pagination(); 
         } 
-        return self::$pagination; 
+        return self::$instance; 
     }
     
 	public function set_up($params = array())
 	{		
-	    include_once(RUTA_CONFIG . 'pagination' . EXT);
+	    $pagination = config::getInstance()->load('pagination')->get_group('pagination');
 	    
 	    foreach ($pagination as $key => $val)
 	    {
@@ -94,10 +94,7 @@ class pagination{
 		$links = null;
 		$total = $this->total / $this->records;
 		$total = ceil($total);	
-		if($this->uri->get($this->segment) > $total){
-			//header("Location: {$this->link}1");
-		}
-		
+
 		if(!$this->complement){
 		  $this->complement = '';
 		}

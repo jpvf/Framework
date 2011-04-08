@@ -1,0 +1,202 @@
+<?php 
+
+class db extends active_record
+{
+    
+    var $query;
+    var $queries = array();
+    var $counter = 0;
+    var $time    = 0;
+    var $result  = null;
+
+    private static $instance; 
+    
+    function __construct()
+    {
+        $db = config::getInstance()->load('db')->get_group('config');  
+
+        foreach ($db as $key => $val)
+        {
+            $this->$key = $val;            
+        }
+
+        $this->_connect();
+        $this->_select_db();
+        $this->_charset();
+    }       
+    
+    public static function getInstance() 
+    { 
+        if ( ! self::$instance) 
+        { 
+            self::$instance = new db(); 
+        } 
+        return self::$instance; 
+    }
+
+    function query($query = '')
+    {        
+        $this->result_object = '';
+        $this->result = null;
+
+        if ($query == '')
+        {
+            $query = $this->get_sql();
+        }
+        
+        $this->formatted_query = nl2br($query);
+        $this->query = $query;
+     
+        require_once(RUTA_SISTEMA . '/database/results' . EXT);
+
+        $res             = new results();   
+        $res->conne_id   = $this->conn_id;
+        $res->results_id = $this->_execute($this->query);
+
+        return $res;
+    } 
+
+    function error()
+    {
+        return mysql_error();
+    }
+    
+    function last_query()
+    {
+        return  '<div style="border:1px solid #990000;padding-left:20px;margin:0 0 10px 0;background:#fff;width:600px;">
+
+                    <h3>Último Query</h3>
+                    
+                    <p>Query: <br />' . $this->formatted_query .'</p>
+                    
+                    <p>Tiempo: <br /> ' . $this->query_time . '</p>
+                                        
+                  </div>'; 
+    }
+
+    function get_queries()
+    {
+        return $this->queries;        
+    }
+            
+    function last_id()
+    {
+        return mysql_insert_id();
+    }
+    
+    function escape_str($str, $dashes = FALSE)    
+    {   
+        if (is_array($str)){
+            foreach($str as $key => $val){
+                $str[$key] = $this->escape_str($val, $like);
+            }        
+            return $str;
+        }
+
+        if (function_exists('mysql_real_escape_string') AND is_resource($this->conn_id)){
+            $str = mysql_real_escape_string($str, $this->conn_id);
+        }
+        elseif (function_exists('mysql_escape_string'))
+        {
+            $str = mysql_escape_string($str);
+        }
+        else
+        {
+            $str = addslashes($str);
+        }
+
+        if ($dashes === TRUE)
+        {
+            if (substr_count($str,'--') > 0)
+            {
+                $str = str_replace('--', '', $str);
+            }
+            
+            if (substr_count($str, ';')  > 0)
+            {
+                $str = str_replace(';', '', $str);
+            }       
+        }        
+        return $str;
+    }
+    
+    function affected_rows()
+    {
+        return mysql_affected_rows();
+    }
+    
+    private function _execute($query){
+        
+        $this->counter += 1;      
+          
+        $start_time = microtime();
+
+        $rows = mysql_query($query);
+
+        $this->queries[] = $query;
+
+        $end_time = microtime();
+
+        $this->time += $end_time - $start_time;  
+           
+        $this->query_time = $end_time - $start_time;
+        
+        if ($this->error() && item('dbdebug'))
+        {
+            //log_mysql($query,$this->error());
+            echo $this->_throw_error($query);
+        }
+        
+        return $rows;
+    }
+    
+    function total_time()
+    {
+        return $this->time;
+    }
+
+    private function _connect()
+    {       
+        $this->conn_id = mysql_connect($this->hostname, $this->username, $this->password);
+    } 
+    
+    private function _select_db()
+    {
+        mysql_select_db ($this->database);
+    }
+    
+    private function _close()
+    {
+        mysql_close($this->conn_id);
+    }
+    
+    private function _charset($charset = null)
+    {
+        $this->c_set = $charset;
+
+        if ($this->c_set == null)
+        {
+            $this->c_set = 'utf8';
+        }
+
+        mysql_query("SET NAMES '" . $this->c_set . "'");
+    }
+
+    private function _throw_error($query)
+    {
+        return  '<div style="border:1px solid #990000;padding-left:20px;margin:0 0 10px 0;background:#fff;width:600px;">
+
+                    <h3>Error de MySQL</h3>
+                    
+                    <p>Query: <br />' . $this->formatted_query .'</p>
+                    <p>Error: '  . $this->error() . '</p>
+                    
+                  </div>';    
+    }
+
+    function __destruct()
+    {
+        $this->_close();
+    }
+
+}

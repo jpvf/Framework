@@ -9,10 +9,8 @@ class Loader{
 	/**
 	 * @var objeto loader, usado en el singleton
 	 */
-	private static $loader; 
+	private static $instance; 
     var $objects = array();
-    var $css_files = array();
-    var $js_files = array();
     var $controlador = '';
 		
 	/**
@@ -21,7 +19,7 @@ class Loader{
 	 */
 	function __construct()
 	{
-        self::$loader = '';
+        spl_autoload_register(array($this, 'library'));
 	}
 	
 	/**
@@ -30,12 +28,11 @@ class Loader{
 	 */
 	public static function getInstance() 
     {        
-        if ( ! self::$loader) 
+        if ( ! self::$instance) 
         { 
-            self::$loader = new Loader(); 
-        } 
-        
-        return self::$loader; 
+            self::$instance = new Loader(); 
+        }         
+        return self::$instance; 
     }
 	 
 	/**

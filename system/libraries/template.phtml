@@ -11,7 +11,7 @@ class template{
 
 	function __construct()
 	{
-		include (RUTA_CONFIG . 'template' . EXT);
+		$template = config::getInstance()->load('template')->get_group('template');
 		
 		foreach ($template as $key => $val)
 		{

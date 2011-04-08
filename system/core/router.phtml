@@ -17,7 +17,7 @@ class Router {
 	{
 		include(RUTA_CONFIG . 'config' . EXT);
 		include(RUTA_CONFIG . 'routes' . EXT);
-		$this->routes =& $route;
+		$this->routes =& $routes;
 		$this->config =& $config;
 		$this->input = input::getInstance();
 		$this->load  = loader::getInstance();
@@ -27,8 +27,7 @@ class Router {
 	}
 	
 	function get_controller()
-	{
-	    include(RUTA_CONFIG . 'routes.phtml');    
+	{ 
 		    
 	    $uri = $this->uri->fetch_uri();
 

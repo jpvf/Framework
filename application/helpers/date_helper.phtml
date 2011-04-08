@@ -1,0 +1,200 @@
+<?php 
+
+if( ! function_exists('gmd'))
+{
+
+    function gmd($date = '', $short = false, $sum = 0 )
+    {
+        $gmt = '-5'; 
+        $actualDST = 0; 
+        $gmt_diff = $gmt + $actualDST;
+        
+        if (!$short)
+        {
+        	 $city_time = strtotime($date)+($gmt_diff*3600)+($sum * 3600);
+        	 $return = gmdate("Y-m-d h:i:s a",$city_time);
+        }
+        else
+        {
+        	 $city_time = strtotime($date)+($gmt_diff)+($sum * 3600);
+        	 $return = gmdate("Y-m-d",$city_time);
+        }
+        
+        return $return;
+    }
+
+}
+
+
+
+
+function sum_dates($date = '', $sum = 0 )
+{
+	$city_time = strtotime($date)+($sum * 3600);
+	$return = date("Y-m-d H:i:s",$city_time);
+	return $return;
+}
+	
+	function date_plus_interval($date = '', $sum = 15 ){
+        $city_time = strtotime($date)+($sum * 60);
+        $return = date("Y-m-d H:i:s",$city_time);
+        return $return;
+    }
+	
+	function get_date()
+	{
+		$date = date('d-m-Y weekday');
+		return $date;
+	}
+	
+	function today($hour = FALSE)
+	{
+		if(!$hour){
+			$date = date('Y-m-d');
+		}else{
+			$date = date('Y-m-d H:i:s');
+		}
+		return $date;
+	}
+	
+	function business_to_calendar ($start_day_of_week, $business_days) {
+		if ( $start_day_of_week == 0 ) {
+			$additional_days = $additional_days + 1;
+			$start_day_of_week = 1;
+		}
+		if ( $start_day_of_week == 6 ) {
+			$additional_days = $additional_days + 2;
+			$start_day_of_week = 1;
+		}
+		if ( $business_days + $start_day_of_week > 5 ) {
+			$num_weekends = floor(($start_day_of_week+$business_days-1)/5);
+			$additional_days = $additional_days + ($num_weekends * 2);
+		}
+		$calendar_days = $business_days + $additional_days;
+		return $calendar_days;
+		/* Funcion para actualizar la fecha de entrega, si es o no dia laboral es irrelevante, igual se actualiza
+		$pre_orders = mysql_query ("SELECT turnaround FROM orders WHERE order_num=".$currord);
+		$turn_calendar_days = business_to_calendar(date("w"), mysql_result($pre_orders,0,0));
+		mysql_query ("UPDATE orders SET status=3, status_since=NOW(), date_placed=NOW(), deadline=DATE_ADD(NOW(), INTERVAL ".$turn_calendar_days." DAY) WHERE order_num=".$currord);*/
+	}
+	
+	function cmp($a, $b)
+	{
+	  return strnatcmp($b, $a);
+	}
+	
+	function timezone($get = FALSE){
+		if($get === FALSE){
+		  $times = array(
+						 	(object) array("offset" => "-12", "name" => "(GMT -12:00) Eniwetok, Kwajalein"),
+							(object) array("offset" => "-11", "name" => "(GMT -11:00) Midway Island, Samoa"),
+							(object) array("offset" => "-10", "name" => "(GMT -10:00) Hawaii"),
+							(object) array("offset" => "-9", "name" => "(GMT -9:00) Alaska"),
+							(object) array("offset" => "-8", "name" => "(GMT -8:00) Pacific Time (US &amp; Canada)"),
+							(object) array("offset" => "-7", "name" => "(GMT -7:00) Mountain Time (US &amp; Canada)"),
+							(object) array("offset" => "-6", "name" => "(GMT -6:00) Central Time (US &amp; Canada), Mexico City"),
+							(object) array("offset" => "-5", "name" => "(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima"),
+							(object) array("offset" => "-4", "name" => "(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz"),
+							(object) array("offset" => "-3.5", "name" => "(GMT -3:30) Newfoundland"),
+							(object) array("offset" => "-3", "name" => "(GMT -3:00) Brazil, Buenos Aires, Georgetown"),
+							(object) array("offset" => "-2", "name" => "(GMT -2:00) Mid-Atlantic"),
+							(object) array("offset" => "-1", "name" => "(GMT -1:00 hour) Azores, Cape Verde Islands"),
+							(object) array("offset" => "0", "name" => "(GMT) Western Europe Time, London, Lisbon, Casablanca"),
+							(object) array("offset" => "1", "name" => "(GMT +1:00 hour) Brussels, Copenhagen, Madrid, Paris"),
+							(object) array("offset" => "2", "name" => "(GMT +2:00) Kaliningrad, South Africa"),
+							(object) array("offset" => "3", "name" => "(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg"),
+							(object) array("offset" => "3.5", "name" => "(GMT +3:30) Tehran"),
+							(object) array("offset" => "4", "name" => "(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi"),
+							(object) array("offset" => "4.5", "name" => "(GMT +4:30) Kabul"),
+							(object) array("offset" => "5", "name" => "(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent"),
+							(object) array("offset" => "5.5", "name" => "(GMT +5:30) Bombay, Calcutta, Madras, New Delhi"),
+							(object) array("offset" => "6", "name" => "(GMT +6:00) Almaty, Dhaka, Colombo"),
+							(object) array("offset" => "7", "name" => "(GMT +7:00) Bangkok, Hanoi, Jakarta"),
+							(object) array("offset" => "8", "name" => "(GMT +8:00) Beijing, Perth, Singapore, Hong Kong"),
+							(object) array("offset" => "9", "name" => "(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk"),
+							(object) array("offset" => "9.5", "name" => "(GMT +9:30) Adelaide, Darwin"),
+							(object) array("offset" => "10", "name" => "(GMT +10:00) Eastern Australia, Guam, Vladivostok"),
+							(object) array("offset" => "11", "name" => "(GMT +11:00) Magadan, Solomon Islands, New Caledonia"),
+							(object) array("offset" => "12", "name" => "(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka")
+						);
+			return $times;
+		}else{
+			$times = array("-12" => "(GMT -12:00) Eniwetok, Kwajalein",
+						   "-11" => "(GMT -11:00) Midway Island, Samoa",
+						   "-10" => "(GMT -10:00) Hawaii",
+						   "-9"  => "(GMT -9:00) Alaska",
+						   "-8"  => "(GMT -8:00) Pacific Time (US &amp; Canada)",
+						   "-7"  => "(GMT -7:00) Mountain Time (US &amp; Canada)",
+						   "-6"  => "(GMT -6:00) Central Time (US &amp; Canada), Mexico City",
+						   "-5"  => "(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima",
+						   "-4"  => "(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz",
+						   "-3.5"  => "(GMT -3:30) Newfoundland",
+						   "-3"  => "(GMT -3:00) Brazil, Buenos Aires, Georgetown",
+						   "-2"  => "(GMT -2:00) Mid-Atlantic",
+						   "-1" => "(GMT -1:00 hour) Azores, Cape Verde Islands",
+						   "0" => "(GMT) Western Europe Time, London, Lisbon, Casablanca",
+						   "1" => "(GMT +1:00 hour) Brussels, Copenhagen, Madrid, Paris",
+							"2" => "(GMT +2:00) Kaliningrad, South Africa",
+							"3" => "(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg",
+							"3.5" => "(GMT +3:30) Tehran",
+							"4" => "(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi",
+							"4.5" => "(GMT +4:30) Kabul",
+							"5" => "(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent",
+							"5.5" => "(GMT +5:30) Bombay, Calcutta, Madras, New Delhi",
+							"6" => "(GMT +6:00) Almaty, Dhaka, Colombo",
+							"7" => "(GMT +7:00) Bangkok, Hanoi, Jakarta",
+							"8" => "(GMT +8:00) Beijing, Perth, Singapore, Hong Kong",
+							"9"  => "(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk",
+							"9.5"=> "(GMT +9:30) Adelaide, Darwin",
+							"10" => "(GMT +10:00) Eastern Australia, Guam, Vladivostok",
+							"11" => "(GMT +11:00) Magadan, Solomon Islands, New Caledonia",
+							"12" => "(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka"
+						);
+			return $times[$get];
+		}
+	}
+	
+	function date_cmp($date, $date1)
+	{
+		if(strtotime($date) > strtotime($date1)){
+			return TRUE;
+		}	
+		return FALSE;
+	}
+	
+function date_to_string($date = '', $hora = FALSE)
+{
+    $lang = language::getInstance();
+    
+	if($date == '')
+	{
+		return;
+	}
+	
+	list($date, $hours) = explode(' ', $date);
+	
+	
+	$fecha = gmd($date, true);
+	list ($y, $m, $d) = explode('-', $fecha);
+	$n = date('m', strtotime($fecha));
+
+    if ($date == today())
+    {
+		$published = $lang->line('today');
+	}
+	else
+	{
+	    list($n, $m) = explode('0', $n);
+	    $published =  $lang->line('month_' . $m) . ' ' . $d . ', ' . $y  ;   
+	}
+	return $published; 
+}
+
+    function strip_hour($date = '')
+    {
+       if($date == ''){
+           return;
+       }
+       $date = explode(' ', $date);
+       return $date[0];
+    }
