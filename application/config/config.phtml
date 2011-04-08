@@ -8,11 +8,6 @@
  */
 $config['base_url'] = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ? "https" : "http");
 $config['base_url'] .= "://".$_SERVER['HTTP_HOST']  . '/';
-/*
- * Los query strings son los que aparecen en la url como parametro=valor&parametro2=valor,
- * en el sistema deben aparecer, si estan habilitados, como option=nombre_controlador&action=nombre_funcion
- */
-$config['query_strings']	  = FALSE;
 
 /*
  * Esta es la pagina de inicio del sistema por donde todo va a ser enrutado. Si se usa el modrewrite de apache para esconderlo, dejarlo en blanco
