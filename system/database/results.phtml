@@ -3,7 +3,7 @@
 class results
 {
     
-    var  $conne_id;
+    var  $conn_id;
     var  $results_id;
     
     function __construct()
@@ -81,12 +81,6 @@ class results
         return mysql_num_rows($this->results_id);
     }
     
-
-    function affected_rows()
-    {
-        return mysql_affected_rows();
-    }
-
     private function _results_array()
     {       
         if (count($this->result_array) > 0)
