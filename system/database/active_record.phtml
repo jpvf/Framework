@@ -185,32 +185,46 @@ class active_record
         {
             $join_table   = $this->_protect_identifiers($join_table);
 
-            $on = $this->_protect_join($on);
+            $on = $this->_protect_operador($on);
 
             $this->join[] = strtoupper($type) . " JOIN $join_table ON ( $on )";
         }     
         return $this;         
     }
 
-    private function _protect_join($on)
+    private function _protect_operador($on, $protect = TRUE)
     {
         if (preg_match('/([\w\.]+)([\W\s]+)(.+)/', $on, $match))
         {
             if (stripos($match[3], ' AND ') !== FALSE)
             {
                 list($last_match , $match_and) = explode(' AND ', $match[3]);
-                $final_match = $this->_protect_join($match_and);
-                $match[3] = $this->_protect_identifiers($last_match) . ' AND ' . $final_match;
+                $final_match = $this->_protect_operador($match_and, $protect);
+
+                if ($protect === TRUE)
+                {
+                    $last_match = $this->_protect_identifiers($last_match);
+                }
+                $match[3] = $last_match . ' AND ' . $final_match;
             }
             elseif (stripos($match[3], ' OR ') !== FALSE)
             {
                 list($last_match , $match_and) = explode(' OR ', $match[3]);
-                $final_match = $this->_protect_join($match_and);
-                $match[3] = $this->_protect_identifiers($last_match) . ' OR ' . $final_match;
+                $final_match = $this->_protect_operador($match_and, $protect);
+
+                if ($protect === TRUE)
+                {
+                    $last_match = $this->_protect_identifiers($last_match);
+                }
+
+                $match[3] = $last_match . ' OR ' . $final_match;
             }
             else
             {
-                $match[3] = $this->_protect_identifiers($match[3]);
+                if ($protect === TRUE)
+                {
+                    $match[3] = $this->_protect_identifiers($match[3]);
+                }            
             }
             $match[1] = $this->_protect_identifiers($match[1]);
         
@@ -228,6 +242,7 @@ class active_record
                 $this->where = "";
             }
             
+            $where = $this->_protect_operador($where, FALSE);
             $this->where .= $where;
                        
         }        
@@ -247,7 +262,7 @@ class active_record
                     $key = "$key =" ;                  
                 }
 
-                $key = $this->_protect_identifiers($key);
+                $key = $this->_protect_operador($key, FALSE);
                 $vars[] = "$key $value";
             }
             $this->where = implode(' AND ', $vars);    
@@ -270,12 +285,19 @@ class active_record
                 $group_by = array($group_by);
             }       
         }        
+        
+        $items = array();
 
-        $this->group_by = implode(",", $group_by);     
+        foreach ($group_by as $item)
+        {
+            $items[] = $this->_protect_identifiers($item);
+        }
+
+        $this->group_by = implode(",", $items);     
         return $this;   
     }    
 
-    function order_by($order_by = '', $order = '')
+    function order_by($order_by = '', $order = 'ASC')
     {
         if ( ! is_array($order_by))
         {
@@ -301,15 +323,22 @@ class active_record
             }       
         }        
 
-        $this->order_by = implode(",", $order_by) . "$order"; 
+        $items = array();
+
+        foreach ($order_by as $item)
+        {
+            $items[] = $this->_protect_identifiers($item);
+        }
+
+        $this->order_by = implode(",", $items) . " $order"; 
         return $this;
     }
 
     
 
     public function having($having)
-    {
-        $this->having = $having;
+    {        
+        $this->having = $this->_protect_operador($having, FALSE);
         return $this;
     }   
 
