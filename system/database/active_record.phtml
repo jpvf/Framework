@@ -17,52 +17,31 @@ class active_record
     private $limit    = ''; 
     private $data     = array();
             
-     
-    public function resource()
-    {
-        return $this->rows;
-    }
     
-    public function affected_rows()
-    {
-        return mysql_affected_rows();
-    }
-
-    public function count_queries()
-    {
-        return $this->counter;
-    }
-    
-    public function time_queries()
-    {
-        return $this->time;
-    }   
-
     function get($table = '', $limit = '', $where = '')
     {
-       if ($table == '')
-       {
-           return;
-       }
-       
-       if ($this->select == '')
-       {        
-        $this->select('*');
-       }
-       
-       $this->from($table);
-       
-       if ($where != '')
-       {
-           $this->where($where);
-       }
-       
-       if ($limit != '')
-       {
-           $this->limit($limit);
-       }
-       
-       return $this->query();
+
+        if ($this->select == '')
+        {        
+            $this->select('*');
+        }
+
+        if ($table != '')
+        {
+            $this->from($table);
+        }
+
+        if ($where != '')
+        {
+            $this->where($where);
+        }
+
+        if ($limit != '')
+        {
+            $this->limit($limit);
+        }
+
+        return $this->query();
     }
 
     function set($key = '', $val = '', $escape = TRUE)
@@ -84,12 +63,18 @@ class active_record
 
     private function _protect_identifiers($val = '')
     {
-        $values = array();
+        $val = trim($val);
 
         if (strpos($val, '.') !== FALSE)
         {
-            $values[] = explode('.', $val);
-            $protected = '`' . implode('`.`' , $values) . '`';
+            $alias = '';
+            if (stripos($val, ' as ') !== FALSE)
+            {
+                list($val, $alias) = explode(' as ', $val );       
+                $alias = " as `$alias`";
+            }
+            $values = explode('.', $val);
+            $protected = '`' . implode('`.`' , $values) . '`' . $alias;
         }
         else
         {
@@ -163,15 +148,34 @@ class active_record
                 $select = array($select);
             }
         }
+
+        $items = array();
+
+        foreach ($select as $item)
+        {
+            if (strpos($item, '*') !== FALSE)
+            {
+                if (strpos($item, '.') !== FALSE)
+                {
+                    list($table, $field) = explode('.', $item);
+                    $item = $this->_protect_identifiers($table) . '.' . $field;
+                }
+                $items[] = $item;
+            }
+            else
+            {
+                $items[] = $this->_protect_identifiers($item);
+            }
+        }
         
-        $select = implode(", ", $select);
+        $select = implode(", ", $items);
         $this->select = $select;
         return $this;
     }    
 
     function from($from = '')
     {
-        $this->from = $from;
+        $this->from = "($from)";
         return $this;
     }
 
@@ -179,9 +183,40 @@ class active_record
     {        
         if ($join_table != '')
         {
+            $join_table   = $this->_protect_identifiers($join_table);
+
+            $on = $this->_protect_join($on);
+
             $this->join[] = strtoupper($type) . " JOIN $join_table ON ( $on )";
         }     
         return $this;         
+    }
+
+    private function _protect_join($on)
+    {
+        if (preg_match('/([\w\.]+)([\W\s]+)(.+)/', $on, $match))
+        {
+            if (stripos($match[3], ' AND ') !== FALSE)
+            {
+                list($last_match , $match_and) = explode(' AND ', $match[3]);
+                $final_match = $this->_protect_join($match_and);
+                $match[3] = $this->_protect_identifiers($last_match) . ' AND ' . $final_match;
+            }
+            elseif (stripos($match[3], ' OR ') !== FALSE)
+            {
+                list($last_match , $match_and) = explode(' OR ', $match[3]);
+                $final_match = $this->_protect_join($match_and);
+                $match[3] = $this->_protect_identifiers($last_match) . ' OR ' . $final_match;
+            }
+            else
+            {
+                $match[3] = $this->_protect_identifiers($match[3]);
+            }
+            $match[1] = $this->_protect_identifiers($match[1]);
+        
+            $on = $match[1].$match[2].$match[3];      
+        }
+        return $on;
     }
 
     function where($where = '')
@@ -212,6 +247,7 @@ class active_record
                     $key = "$key =" ;                  
                 }
 
+                $key = $this->_protect_identifiers($key);
                 $vars[] = "$key $value";
             }
             $this->where = implode(' AND ', $vars);    

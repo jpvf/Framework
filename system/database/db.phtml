@@ -55,6 +55,21 @@ class db extends active_record
     {
         return $this->queries;        
     }
+
+    function count_queries()
+    {
+        return $this->counter;
+    }
+    
+    function time_queries()
+    {
+        return $this->time;
+    }   
+
+    function resource()
+    {
+        return $this->rows;
+    }
             
     function last_id()
     {
