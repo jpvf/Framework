@@ -1,18 +1,16 @@
 <?php if ( ! defined('BASE')) exit('Acceso directo prohibido');
+
 /**
  * Clase URI para el manejo de los parametros que entran por la URI.
  *
  */
 class Uri{
 
-    /**
-     * Variable estática para no tener que instanciar varias veces el mismo objeto
-     * @var private static
-     */
-    private static $uri;
-    var $uri_system_segments;
-    var $uri_string;
-    var $segments;
+    private static $instance;
+    private $uri_string;
+    private $segments;
+    private $fetch_uri;
+    var $rsegments = array();
 
     /**
      * Retorna el objeto que se instancia la primera vez, asi se evita crear basura con los objetos
@@ -20,108 +18,62 @@ class Uri{
      */
     public static function getInstance()
     {
-        //Si el objeto de tipo URI no existe, se crea uno nuevo.
-        if(!self::$uri){
-            //El objeto nuevo se asigna a la variable estática para poderlo usar desde cualquier punto de la aplicacion
-            self::$uri = new Uri;
+        if ( ! self::$instance)
+        {
+            self::$instance = new Uri;
         }
-        //Retorna el objeto uri.
-        return self::$uri;
+        return self::$instance;
     }
     
-    //Constructor de la clase
     function __construct()
     {
-        //Asigna la instancia de input para limpiar la URI cuando se pida algun segmento
-        $this->input = input::getInstance();
-        $this->security = security::getInstance();
+        self::$instance = $this;
+
+        $input    = input::getInstance();
+        $security = security::getInstance();
+        $config   = config::getInstance();
         
-        //Para evitar errores, sino existe una URI válida se retorna un valor nulo.
-        if (!$this->input->server('PATH_INFO',TRUE))
+        $host  = $config->get('base_url');
+        $index = $config->get('index_page');
+        
+
+        $segments = explode('/', str_replace('/' . $index,'', $input->server('REQUEST_URI',TRUE)));  
+                
+        foreach ($segments as $key => $val)
         {
-            return;
-        }
-        
-        include(RUTA_CONFIG . 'config' . EXT);
-        
-        //Reemplaza la extension del archivo .phtml por un espacio porque se va a usar de esa extensión en adelante.
-        $this->segments = str_replace($config['index_page'],'',$this->input->server('PATH_INFO',TRUE));
-        
-        //Se separan los segmentos dentro de un array
-        $this->segments = explode('/', $this->segments);
-        
-        $host = $config['base_url'];
-        $index = $config['index_page'];
-        
-        if (empty($index))
-        {
-           $host = substr($host,0,-1);
+          $this->rsegments[] = $security->xss_clean($val);
         }
 
-        $url = $host . $index ;
-        
-       
-        if(!empty($index)){
-         //   unset($this->segments[0]);
-        } 
-                
-        $this->segments_uri = str_replace(('/' . $index),'',$this->input->server('REQUEST_URI',TRUE));
-        
-        $this->uri_system_segments = $url . '/' . implode('/',$this->segments);
-        $this->uri_string = implode('/',$this->segments);
-        $this->fetch_uri = $this->segments;
-        
-        $rsegments = array();
-        
-        foreach ($this->segments as $key => $val)
-        {
-          $rsegments[] = $this->security->xss_clean($val);
-        }
-        
-        $this->rsegments = $rsegments;
+        return $this;
     }
     
-    //Funcion usada dentro del MVC para obtener segmentos de la URI
-    function get($param = null)
+    function get($param = NULL)
     {       
-        //Si se llama a la funcion pero no se le envian parametros se retorna un valor nulo.
-        if ($param == '')
+        if (is_null($param))
         {
-            return;
+            return $this->get_uri_string();
         }
-        
-        $segments = $this->segments;
-        
-        //Para evitar errores se instancia como string pero vacia.
-        $item = '';
-        
-        //Si existe el segmento solicitado sino es porque se solicito un indice inexistente.
-        if (isset($segments[$param]))
-        {
-            //Item es el segmento solicitado
-            $item = $segments[$param];
-            //Se limpia de cualquier ataque xss 
-            $item = $this->security->xss_clean($item); 
-        }
-        
-        //Devuelve el segmento solicitado.
-        return $item;
+     
+        return (isset($this->rsegments[$param])) ? $this->rsegments[$param] : '';
     }
     
-    function segments()
-    {
-       return $this->uri_system_segments;
-    }
     
     function fetch_uri()
     {
-       return (isset($this->fetch_uri)) ? $this->fetch_uri : array();
+        if ( ! $this->fetch_uri)
+        {
+            $this->fetch_uri = $this->rsegments;
+        }
+        return $this->fetch_uri;
     }
     
     function get_uri_string()
     {
-       return $this->uri_string;
+        if ( ! $this->uri_string)
+        {
+            $this->uri_string = implode('/',$this->rsegments);
+        }
+        return $this->uri_string;
     }
-
 
 }
