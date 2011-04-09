@@ -25,31 +25,26 @@ class Controller{
 	 */
 	public function __construct()
 	{
-	   self::$instance = $this;
+      self::$instance = $this;
 
-       $this->load = loader::getInstance();
-       $this->db   = db::getInstance();
+      $this->load = loader::getInstance();
+      $this->db   = db::getInstance();
 
-       foreach ($this->load->objects as $key => $val)
-       {
-           if ( ! isset($this->$key))
-           {
-            $this->$key = $val;
-           }
-       }
-       
-       $this->session  = session::getInstance();
-       $this->language = language::getInstance();
-       
-       if (isset($this->language))
-       {
-           $this->language->load($this->session->get('user_lang'));
-       }
-	}
-	
-	public static function instance()
-	{
-	   return self::$instance;
+      foreach ($this->load->objects as $key => $val)
+      {
+         if ( ! isset($this->$key))
+         {
+          $this->$key = $val;
+         }
+      }
+
+      $this->session  = session::getInstance();
+      $this->language = language::getInstance();
+
+      if (isset($this->language))
+      {
+         $this->language->load($this->session->get('user_lang'));
+      }
 	}
 	
 	   
