@@ -31,7 +31,7 @@ class Router {
 		    
 	    $uri = $this->uri->fetch_uri();
 
-		if ( ! $this->uri->uri_string)
+		if ( ! $this->uri->get_uri_string())
         {
             $uri = $this->_set_default_controller();
         }
@@ -48,7 +48,6 @@ class Router {
             }  
             $this->set_clase($this->config['default_controller']);
             $this->uri->rsegments[0] = $this->clase;
-            $this->uri->segments[0] = $this->clase;
         }
         else
         {  
@@ -101,7 +100,7 @@ class Router {
 	    
 	    foreach ($segments as $key => $val)
 	    {	    
-	       if (!empty($val))
+	       if ( ! empty($val))
 	       {	           
 	           $uri[] = $val;	           
 	       }

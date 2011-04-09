@@ -1,19 +1,14 @@
 <?php
-class model{
+class Model{
 
 	function __construct()
 	{
-		$this->base = controller::getInstance();
 
-		foreach ($this->base as $key => $val)
-		{
-			$this->$key = $val;
-		}
 	}
 
 	function __get($key)
 	{
-		$base = controller::getInstance();
+		$base = Controller::getInstance();
 		return $base->$key;
 	}
 		

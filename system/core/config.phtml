@@ -14,6 +14,11 @@ class Config
         return self::$instance;
     }
     
+    function __construct()
+    {
+        self::$instance = $this;
+    }
+
     function load($files = '')
     {
     	if (is_string($files))
@@ -31,6 +36,7 @@ class Config
     	foreach ($files as $file)
     	{
     		$file = trim($file);
+        
     		$config_file = RUTA_CONFIG . $file . EXT;
 
     		if (file_exists($config_file))

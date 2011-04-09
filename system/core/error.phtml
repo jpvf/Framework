@@ -1,12 +1,12 @@
 <?php 
 
-class error{
+class Error{
 
-	private static $error; 
+	private static $instance; 
 	
 	public function __construct()
 	{
-	
+		self::$instance = $this;
 	}
 	/**
 	 * Singleton para usar el objeto del controlador.
@@ -15,11 +15,11 @@ class error{
 	 */
 	public static function getInstance() 
     { 
-        if (!self::$error) 
+        if ( ! self::$instance) 
         { 
-            self::$error = new error(); 
+            self::$instance = new error(); 
         } 
-        return self::$error; 
+        return self::$instance; 
     }
     
 	public function trigger_error($error = null, $args = null)
@@ -39,7 +39,7 @@ class error{
 				case '404':
 				    if (is_xhr())
 				    {
-				        echo 'Página no encontrada';
+				        echo '404. Página no encontrada';
 				        exit;
 				    }
 					include(RUTA_APP . '/errors/404' . EXT);

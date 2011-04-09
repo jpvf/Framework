@@ -56,13 +56,14 @@ class Input {
 	 */
 	public function __construct()
 	{
+		self::$instance = $this;
+		
 		$this->_allow_get_array	= TRUE;
 		$this->_enable_xss		= TRUE;
 		$this->_enable_csrf		= FALSE;
 
 		$this->security = security::getInstance();
 
-		// Sanitize global arrays
 		$this->_sanitize_globals();
 	}
 

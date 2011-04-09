@@ -113,7 +113,7 @@ class Loader{
     			{	
     				$clase = ucfirst($clase);
     			    $this->objects[$objeto] = new $clase;    			    
-    			    $controller = Controller::instance();
+    			    $controller = Controller::getInstance();
     			    $controller->$objeto =& $this->objects[$objeto];
     			}
 			}							
