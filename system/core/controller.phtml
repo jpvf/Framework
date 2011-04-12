@@ -23,11 +23,12 @@ class Controller{
 	 * 
 	 * @return void
 	 */
-	public function __construct()
+	function __construct()
 	{
       self::$instance = $this;
 
       $this->load = loader::getInstance();
+
       $this->db   = db::getInstance();
 
       foreach ($this->load->objects as $key => $val)
@@ -45,7 +46,15 @@ class Controller{
       {
          $this->language->load($this->session->get('user_lang'));
       }
+
+      $this->_register_autoload();
 	}
+
+  private function _register_autoload()
+  {    
+      spl_autoload_register(array($this->load, 'autoload_model'));    
+  }
+
 
 	   
 }

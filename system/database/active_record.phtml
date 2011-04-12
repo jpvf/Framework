@@ -61,9 +61,72 @@ class active_record
         }            
     }
 
-    private function _protect_identifiers($val = '')
+    private function _protect_identifiers($item = '', $prefix_single = FALSE, $protect_identifiers = NULL, $field_exists = TRUE)
     {
-        $val = trim($val);
+        $this->_reserved_identifiers = array('*');
+        if ( ! is_bool($protect_identifiers))
+        {
+            $protect_identifiers = TRUE;
+        }
+
+        if (is_array($item))
+        {
+            $escaped_array = array();
+
+            foreach($item as $k => $v)
+            {
+                $escaped_array[$this->_protect_identifiers($k)] = $this->_protect_identifiers($v);
+            }
+
+            return $escaped_array;
+        }
+        $item = trim($item);
+
+        // Convert tabs or multiple spaces into single spaces
+        $item = preg_replace('/[\t ]+/', ' ', $item);
+
+        // If the item has an alias declaration we remove it and set it aside.
+        // Basically we remove everything to the right of the first space
+        $alias = '';
+        if (strpos($item, ' ') !== FALSE)
+        {
+            $alias = strstr($item, " ");
+            $item = substr($item, 0, - strlen($alias));
+        }
+
+        // This is basically a bug fix for queries that use MAX, MIN, etc.
+        // If a parenthesis is found we know that we do not need to
+        // escape the data or add a prefix.  There's probably a more graceful
+        // way to deal with this, but I'm not thinking of it -- Rick
+        if (strpos($item, '(') !== FALSE)
+        {
+            return $item.$alias;
+        }
+
+        // Break the string apart if it contains periods, then insert the table prefix
+        // in the correct location, assuming the period doesn't indicate that we're dealing
+        // with an alias. While we're at it, we will escape the components
+        if (strpos($item, '.') !== FALSE)
+        {
+            $parts  = explode('.', $item);
+
+
+            if ($protect_identifiers === TRUE)
+            {
+                $item = $this->_escape_identifiers($item);
+            }
+
+            return $item.$alias;
+        }
+
+
+        if ($protect_identifiers === TRUE AND ! in_array($item, $this->_reserved_identifiers))
+        {
+            $item = $this->_escape_identifiers($item);
+        }
+
+        return $item.$alias;
+       /* $val = trim($val);
 
         if (strpos($val, '.') !== FALSE)
         {
@@ -81,7 +144,39 @@ class active_record
             $protected = '`' . $val . '`';
         }
 
-        return $protected;
+        return $protected;*/
+    }
+
+    function _escape_identifiers($item)
+    {
+        $this->_escape_char ='`';
+        if ($this->_escape_char == '')
+        {
+            return $item;
+        }
+
+        foreach ($this->_reserved_identifiers as $id)
+        {
+            if (strpos($item, '.'.$id) !== FALSE)
+            {
+                $str = $this->_escape_char. str_replace('.', $this->_escape_char.'.', $item);  
+                
+                // remove duplicates if the user already included the escape
+                return preg_replace('/['.$this->_escape_char.']+/', $this->_escape_char, $str);
+            }       
+        }
+        
+        if (strpos($item, '.') !== FALSE)
+        {
+            $str = $this->_escape_char.str_replace('.', $this->_escape_char.'.'.$this->_escape_char, $item).$this->_escape_char;            
+        }
+        else
+        {
+            $str = $this->_escape_char.$item.$this->_escape_char;
+        }
+    
+        // remove duplicates if the user already included the escape
+        return preg_replace('/['.$this->_escape_char.']+/', $this->_escape_char, $str);
     }
     
     function insert($values = array(), $tabla = '')
@@ -242,7 +337,7 @@ class active_record
                 $this->where = "";
             }
             
-            $where = $this->_protect_operador($where, FALSE);
+           // $where = $this->_protect_identifiers($where);
             $this->where .= $where;
                        
         }        
@@ -262,7 +357,7 @@ class active_record
                     $key = "$key =" ;                  
                 }
 
-                $key = $this->_protect_operador($key, FALSE);
+               // $key = $this->_protect_operador($key, FALSE);
                 $vars[] = "$key $value";
             }
             $this->where = implode(' AND ', $vars);    

@@ -109,7 +109,7 @@ class Loader{
 			{
     			include_once($lib);	
     			    				
-    			if (class_exists($clase))
+    			if (class_exists($clase) AND strpos($lib, 'MY_') === FALSE)
     			{	
     				$clase = ucfirst($clase);
     			    $this->objects[$objeto] = new $clase;    			    
@@ -205,7 +205,7 @@ class Loader{
 	 * @param $model
 	 * @return void
 	 */
-	function model($model = '', $obj = '')
+	function model($model = '', $obj = '', $create_object = TRUE)
 	{
 		$file = RUTA_MODELS . $model . EXT;
 		
@@ -233,10 +233,19 @@ class Loader{
 		    list($carpeta, $model) = explode('/', $model);
 		}
 		
-		$obj = ($obj == '') ? $model : $obj ;
-		$base = controller::getInstance(); 
-		$model = ucfirst($model);
-		$base->$obj = new $model;
+		if ($create_object === TRUE)
+		{
+			$obj = ($obj == '') ? $model : $obj ;
+			$base = controller::getInstance(); 
+			$model = ucfirst($model);
+			$base->$obj = new $model;
+		}
+	}
+
+	function autoload_model()
+	{
+		$model = func_get_arg(0);
+		$this->model($model, '', FALSE);
 	}
 	
 	function helper($helper = '')

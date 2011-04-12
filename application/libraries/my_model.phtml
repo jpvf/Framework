@@ -1,6 +1,6 @@
 <?php
 
-class my_model extends model
+class MY_Model
 {
 		
 	protected $tabla_id;
@@ -11,45 +11,118 @@ class my_model extends model
 	protected $has_many;
 	protected $belongs_to;
 
-	function __construct($id = FALSE)
-	{
-		parent::__construct();
+	private $_where;
+	private $_attr;
 
-		if ($id !== FALSE)
-		{			
-			$this->find($id);
+	function __construct($id = 0)
+	{
+		$this->db = db::getInstance();
+
+		foreach ($this->fields as $field)
+		{
+			$this->_attr = array($field => '');
 		}
+	
+		$this->find($id);		
 	}
 
     function __get($key)
     {
-    	return $this->attr->$key;
+    	return $this->_attr->$key;
     }
 
     function __call($func, $args)
     {
-    	$func = str_replace('find_by_', '', $func);
-    	$args = implode('', $args);
-    	return $this->_get_by_field($func, $args);
+    	if (strpos($func, 'find_by_') !== FALSE)
+	    {	    	
+	    	$func = str_replace('find_by_', '', $func);
+	    	$args = implode('', $args);
+    		return $this->_find_by($func, $args);
+	    }
     }
 
-    function find($id = 0)
-	{
-		$active = $this->_active();
-		$result = $this->db->where("{$this->tabla_id} = $id $active")->get($this->tabla);
+    private function _fill_object($result = null)
+    {
+    	if (is_null($result))
+    	{
+    		return FALSE;
+    	}    	
+    	
+    	if ($result->num_rows() > 0)
+    	{
+    		$this->all = $result->result();
+    		if ($result->num_rows() == 1)
+    		{
+    			$this->_attr = $result->row();
+    		}
+    	}
 
-		if ($result->num_rows() > 0)
+    	return TRUE;
+    }
+
+    function where($field = null , $value = '')
+    {
+    	if ( is_string($field))
+    	{
+    		$this->_where[$field] = $value;
+    		return $this;
+    	}
+
+    	if ( is_array($field))
+    	{
+    		foreach ($field as $key => $val)
+    		{
+    			$this->_where[$key] = $val;
+    		}
+
+    		return $this;
+    	}
+
+    	return $this;
+    }
+
+    function find($id = 0, $limit = NULL, $offset = NULL)
+	{
+		if ( ! is_numeric($id) OR $id < 1)
 		{
-			$this->attr = $result->row();
+			$this->find_all($limit, $offset);
+			return $this;
 		}
+
+		$and = '';
+
+		if (count($this->_where) > 0)
+		{
+			$this->db->where($this->_where);
+			$and = ' AND ';
+		}
+
+
+		$this->db->where("$and {$this->tabla}.{$this->tabla_id} = $id");
+		$result = $this->db->get($this->tabla);
+
+		if ($this->_fill_object($result) === TRUE)
+		{
+			return $this;
+		}
+		return FALSE;
+	}
+
+	function find_all($limit = null, $offset = null, $order = '')
+	{
+		if ( ! is_null($limit))
+		{
+			$this->db->limit($limit, $offset);
+		}
+		$this->_find_all($order);
 		return $this;
 	}
 
-	function find_all($filtro = '', $orden = '')
+	private function _find_all($orden = '')
 	{
-		if ( ! empty($filtro))
+		if (count($this->_where) > 0)
 		{
-			$this->db->where($filtro);
+			$this->db->where($this->_where);
 		}
 
 		if ( ! empty($orden))
@@ -57,24 +130,20 @@ class my_model extends model
 			$this->db->order_by($orden);	
 		}
 
-		$active = $this->_active();
-		return $this->db->get($this->tabla);		
+		$results = $this->db->get($this->tabla);
+		
+		$this->all = $results->result();	
 	}
 
-	private function _get_by_field($field = '', $val = '')
+	private function _find_by($field = '', $val = '')
 	{
 		if (is_string($val))
 		{
 			$val = "'$val'";
 		}
-
-		$active = $this->_active();
-		return $this->db->where("{$field} = $val $active")->get($this->tabla);
+		$result = $this->db->where("{$this->tabla}.{$field} = $val")->get($this->tabla);
+		$this->_fill_object($result);
 	}
 
-	private function _active()
-	{
-		return ( ! empty($this->active)) ? "AND {$this->tabla_active} = 1" : '' ;		
-	}
 	
 }
