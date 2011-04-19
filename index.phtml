@@ -44,11 +44,11 @@ $controlador = $router->get_controller();
 
 //Si llega hasta acá es porque el controlador existe en alguna parte.
 
-include($controlador['archivo']);
+include($controlador->archivo);
 
-$clase = $controlador['controlador'];
+$clase = $controlador->controlador;
 
-$load->controlador = $controlador['controlador'];
+$load->controlador = $controlador->controlador;
 
 if (strpos($clase, '/'))
 {
@@ -58,16 +58,16 @@ if (strpos($clase, '/'))
 
 $clase = new $clase;
 
-if (method_exists($clase, $controlador['metodo']) && is_callable(array($clase,$controlador['metodo'])))
+if (method_exists($clase, $controlador->metodo) && is_callable(array($clase,$controlador->metodo)))
 {       
-    $vars = ($controlador['directorio'] == '') ? array_slice($uri->rsegments, 2) : array_slice($uri->rsegments, 3);
+    $vars = ($controlador->directorio == '') ? array_slice($uri->rsegments, 2) : array_slice($uri->rsegments, 3);
 
     if (method_exists($clase, 'before'))
     {
         call_user_func_array(array(&$clase, 'before'), $vars);    
     }
 
-    call_user_func_array(array(&$clase, $controlador['metodo']), $vars);   
+    call_user_func_array(array(&$clase, $controlador->metodo), $vars);   
     
     if (method_exists($clase, 'after'))
     {

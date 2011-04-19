@@ -173,10 +173,10 @@ class Router {
 	}
 		
 	private function _load_controller(){
-	    return array('controlador' => $this->controlador,  
-	                 'metodo'      => $this->metodo, 
-	                 'directorio'  => $this->directorio,
-	                 'archivo'	   => $this->controller_file);
+	    return (object) array('controlador' => $this->controlador,  
+	                          'metodo'      => $this->metodo, 
+	                          'directorio'  => $this->directorio,
+	                          'archivo'	    => $this->controller_file);
 		
 	}
 
