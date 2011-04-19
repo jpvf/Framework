@@ -6,6 +6,11 @@ class Language {
 	private $is_loaded	= array();
 	private $lang;
 	private static $instance;
+
+	function __construct()
+	{
+		//show(__CLASS__ . ' iniciada <br>');		
+	}
 	
     public static function getInstance() 
     { 

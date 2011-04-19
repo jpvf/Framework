@@ -25,6 +25,7 @@ class Controller{
 	 */
 	function __construct()
 	{
+      
       self::$instance = $this;
 
       $this->load = loader::getInstance();
@@ -33,10 +34,10 @@ class Controller{
 
       foreach ($this->load->objects as $key => $val)
       {
-         if ( ! isset($this->$key))
-         {
-          $this->$key = $val;
-         }
+          if ( ! isset($this->$key))
+          {
+              $this->$key = $val;
+          }
       }
 
       $this->session  = session::getInstance();
@@ -48,6 +49,7 @@ class Controller{
       }
 
       $this->_register_autoload();
+      //show(__CLASS__ . ' iniciada <br>');
 	}
 
   private function _register_autoload()

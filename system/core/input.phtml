@@ -62,10 +62,10 @@ class Input {
 		$this->_allow_get_array	= TRUE;
 		$this->_enable_xss		= TRUE;
 		$this->_enable_csrf		= FALSE;
-
 		$this->security = security::getInstance();
 
 		$this->_sanitize_globals();
+		//show(__CLASS__ . ' iniciada <br>');
 	}
 
 	// --------------------------------------------------------------------

@@ -9,11 +9,17 @@ define('RUTA_SISTEMA', PATH . '/system');
 define('RUTA_CORE'   , RUTA_SISTEMA . '/core/');
 define('EXT'         , '.phtml');
 
+
 include(RUTA_CORE    . 'constants'      . EXT);
+include(RUTA_PACKAGES. 'debug/debug'    . EXT);
 include(RUTA_CORE    . 'config'         . EXT);
 include(RUTA_CORE    . 'loader'         . EXT);
+include(RUTA_CORE    . 'router'         . EXT);
+include(RUTA_CORE    . 'language'       . EXT);
 include(RUTA_DB      . 'active_record'  . EXT);
 include(RUTA_DB      . 'db'             . EXT);
+include(RUTA_DB      . 'results'        . EXT);
+
 
 $config = config::getInstance();
 $load   = loader::getInstance();
@@ -21,9 +27,7 @@ $load   = loader::getInstance();
 $config->load('config, autoload');
 $load->helper($config->get('helpers'));
 $load->library($config->get('libraries'));
-
 $input  = input::getInstance();
-$input->_sanitize_globals();
 
 if ($config->get('debug'))
 {
@@ -42,9 +46,9 @@ $controlador = $router->get_controller();
 
 include($controlador['archivo']);
 
-$clase = $controlador['clase'];
+$clase = $controlador['controlador'];
 
-$load->controlador = $controlador['clase'];
+$load->controlador = $controlador['controlador'];
 
 if (strpos($clase, '/'))
 {

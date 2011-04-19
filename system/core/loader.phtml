@@ -19,6 +19,7 @@ class Loader{
 	 */
 	function __construct()
 	{
+		//show(__CLASS__ . ' iniciada <br>');
         spl_autoload_register(array($this, 'library'));
 	}
 	
@@ -114,7 +115,7 @@ class Loader{
     				$clase = ucfirst($clase);
     			    $this->objects[$objeto] = new $clase;    			    
     			    $controller = Controller::getInstance();
-    			    $controller->$objeto =& $this->objects[$objeto];
+    			    $controller->$objeto =& $this->objects[$objeto];    			
     			}
 			}							
 		}
@@ -215,7 +216,9 @@ class Loader{
 		}
 		else
 		{
-			$file = RUTA_MODULOS . $this->controlador . '/models/' . $model . EXT;
+			$uri = Uri::getInstance();
+			$segments = $uri->fetch_uri();
+			$file = RUTA_MODULOS . $segments[1] . '/models/' . $model . EXT;
 
 			if ( ! file_exists($file))
 			{

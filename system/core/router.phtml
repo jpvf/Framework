@@ -2,120 +2,85 @@
 
 class Router {
 
-	private static $router;
+    var $directorio  = '';
+    var $controlador = '';
+	private static $instance;
 	
 	public static function getInstance()
 	{
-		if ( ! self::$router)
+		if ( ! self::$instance)
 		{
-			self::$router = new router();
+			self::$instance = new Router();
 		}
-		return self::$router;
+		return self::$instance;
 	}
 	
 	function __construct()
-	{
-		include(RUTA_CONFIG . 'config' . EXT);
-		include(RUTA_CONFIG . 'routes' . EXT);
-		$this->routes =& $routes;
-		$this->config =& $config;
-		$this->input = input::getInstance();
-		$this->load  = loader::getInstance();
-		$this->uri   = uri::getInstance();
-		$this->class_c = '';
-		$this->directorio = '';
-	}
+    {
+        //show(__CLASS__ . ' iniciada <br>');
+        $this->config = config::getInstance();
+        $this->uri    = uri::getInstance();
+    }
 	
 	function get_controller()
-	{ 
-		    
+	{ 		    
+       //Trae la uri actual...
 	    $uri = $this->uri->fetch_uri();
 
-		if ( ! $this->uri->get_uri_string())
+        //Es necesario traer al controlador del config?
+		if ($this->uri->get_uri_string() == '/' OR ! $this->uri->get_uri_string())
         {
             $uri = $this->_set_default_controller();
         }
 
-        $segments = $this->_rutas($uri);
-                       
-	    $this->controlador = '';
-	    
-        if (count($segments) == 0)
-        { 
-            if ($this->directorio != '')
-            {
-               $this->controlador .= $this->directorio . '/';                   
-            }  
-            $this->set_clase($this->config['default_controller']);
-            $this->uri->rsegments[0] = $this->clase;
-        }
-        else
-        {  
-            
-            if($this->directorio != '')
-            {
-               $this->controlador .= $this->directorio . '/';                   
-            }
-            
-            $clase = $segments[0];
-            $this->set_clase($clase);                
+        //Revisa las rutas predefinidas para sobreescribir la actual
+        $segments = $this->_rutas($uri);     
+
+        //Aun no hay metodo?
+        if ( empty($this->metodo) OR ! isset($this->metodo))
+        {
+            $this->metodo = ( ! empty($segments[1])) ? $segments[1] : 'index';
         }
 
-        $metodo = (isset($segments[1])) ? $segments[1] : FALSE;
-
-        if ($metodo)
-        {
-            $this->set_metodo($metodo);
-        }
-        else
-        {
-            $this->set_metodo('index');
-        }
-        
-        $this->controlador .= $this->clase;
-	
 		return $this->_load_controller();
 	}
 	
-	function _set_default_controller()
+	private function _set_default_controller()
 	{ 
-	    if (strpos($this->config['default_controller'], '/'))
+	    if (strpos($this->config->get('default_controller'), '/') !== FALSE)
         {
-            return explode('/', $this->config['default_controller']);
+            $this->uri->init('/' . $this->config->get('index_page') . '/' . $this->config->get('default_controller') . '/');
+            return $this->uri->fetch_uri();
         }
-        else
-        {
-            return array($this->config['default_controller'], 'index');
-        }
+        
+        return explode('/', '/' . $this->config->get('default_controller') . '/');
 	}
 	
-	function _rutas($segments = array())
+	private function _rutas($segments = array())
 	{
-	    if (count($segments) == 0)
-	    {
-            $segments = explode('/', $this->config['default_controller']);
-        }
+        $this->config->load('routes');
+        $routes = $this->config->get_group('routes');
         
 	    $uri = array();
 	    
-	    foreach ($segments as $key => $val)
+	    foreach ($segments as $segment)
 	    {	    
-	       if ( ! empty($val))
+	       if ( ! empty($segment))
 	       {	           
-	           $uri[] = $val;	           
-	       }
-	       
+	           $uri[] = $segment;	           
+	       }	       
 	    }	    
 
 	    $segments = $uri;
 	    
 	    $uri = implode('/', $segments);
-        if (isset($this->routes[$uri]))
+
+        if (isset($routes->$uri))
         {
             return $this->_validar_peticion(explode('/', $segments));
         }
-        
-        foreach ($this->routes as $key => $val)
+
+        foreach ($routes as $key => $val)
         {
             $key = str_replace(':letra', '.+', str_replace(':numero', '[0-9]+', $key));
 
@@ -135,82 +100,80 @@ class Router {
         return $this->_validar_peticion($segments);
 	}
 		
-	function _validar_peticion($segments = array())
+	private function _validar_peticion($segments = array())
 	{
-        if (count($segments) == 0)
+       //Es un modulo?
+        if (is_dir(RUTA_MODULOS . $segments[0]))
         {
-            $file = $this->config['default_controller'];
-            $this->controller_file = RUTA_MODULOS . $file . '/controllers/' . $file .EXT;
-            return $segments;
-        }
+            $segments[1] = (isset($segments[1])) ? $segments[1] : '';
 
-        if (file_exists( RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[0] .EXT))
+            //Es una subcarpeta con nombre distinto al de la carpeta?
+            if (is_dir(RUTA_MODULOS . $segments['0'] . '/controllers/' . $segments[1]))
+            {
+                $segments[2] = (isset($segments[2])) ? $segments[2] : '';
+
+                //es un archivo dentro de la subcarpeta?
+                if (file_exists( RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[1] . '/' . $segments[2] .EXT))
+                {
+                    $this->directorio  = '';
+                    $this->controlador = $segments[2];
+                    $this->metodo      = (isset($segments[3])) ? $segments[3] : 'index';
+                    $this->controller_file =  RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[1] . '/' . $segments[2] .EXT;
+                    return $segments;
+                }
+                //Es un archivo pero con distinto nombre a la carpeta del modulo?
+                if (file_exists( RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[1] .EXT))
+                {
+                    $this->directorio = '';
+                    $this->controlador = $segments[1];
+                    $this->metodo      = (isset($segments[2])) ? $segments[2] : 'index';
+                    $this->controller_file = RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[1] .EXT;
+                    return $segments;
+                }
+
+            }
+
+            //Es entonces un modulo con nombre de carpeta y archivo igual?
+            if (file_exists( RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[0] .EXT))
+            {
+                $this->metodo = (isset($segments[1])) ? $segments[1] : 'index';
+                $this->directorio = '';
+                $this->controlador = $segments[0];
+                $this->controller_file = RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[0] .EXT;    
+                return $segments;            
+            } 
+        }        
+
+        //Es un directorio dentro de la carpeta controllers?
+        if (is_dir(RUTA_CONTROLLERS . $segments[0]))
+        {
+            $this->set_directorio($segments[0]);
+
+            $segments = array_slice($segments, 1);
+            
+            //Es un archivo dentro del directorio?
+            if (file_exists(RUTA_CONTROLLERS . $this->directorio . '/' . $segments[0].EXT))
+            {
+                $this->controlador = $segments[0];
+                $this->controller_file = RUTA_CONTROLLERS . $this->directorio . '/' . $segments[0].EXT;
+                return $segments;
+             }
+        }
+        //FInalmente, es simplemente un archivo dentro de la carpeta base de controllers?
+        elseif (file_exists(RUTA_CONTROLLERS . $segments[0] .EXT))
         {
             $this->directorio = '';
-            $this->controller_file = RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[0] .EXT;
-            return $segments; 
-        }
-
-        if (file_exists(RUTA_CONTROLLERS . $segments[0] .EXT))
-        {
-            $this->directorio = '';
+            $this->controlador = $segments[0];
             $this->controller_file = RUTA_CONTROLLERS . $segments[0] .EXT;
             return $segments; 
         }
 
-        if (is_dir(RUTA_CONTROLLERS . $segments[0]))
-        {
-            $this->set_directorio($segments[0]);
-            $segments = array_slice($segments, 1);
-
-            if (count($segments) > 0)
-            {
-                if ( ! file_exists(RUTA_CONTROLLERS . $this->directorio . '/' . $segments[0].EXT))
-                {
-                    mostrar_error();
-                }
-
-                 $this->controller_file = RUTA_CONTROLLERS . $this->directorio . '/' . $segments[0].EXT;
-            }
-            else
-            {
-                $this->set_metodo('index');
-                
-                if ( ! file_exists(RUTA_CONTROLLERS . $this->directorio . '/' . $this->config['default_controller']  . EXT))
-                { 
-                    $this->directorio = '';
-                    return array();
-                }
-
-              	$this->controller_file = RUTA_CONTROLLERS . $this->directorio . '/' . $this->config['default_controller']  . EXT;
-                
-            }
-            
-            return $segments;
-        }
-
+        //Si llega hasta aca es que no hay mas que hacer.
 		mostrar_error();
 	}
-	
-	function set_directorio($dir = '')
-	{
-	   $this->directorio = $dir;
-	}
 		
-	function set_metodo($metodo = '')
-	{
-	   $this->metodo = $metodo;
-	}
-	
-	function set_clase($clase = '')
-	{
-	   
-	   $this->clase = $clase;
-	}
-	
-	function _load_controller(){
-	    return array('controlador' => $this->controlador, 
-	                 'clase'       => $this->clase, 
+	private function _load_controller(){
+	    return array('controlador' => $this->controlador,  
 	                 'metodo'      => $this->metodo, 
 	                 'directorio'  => $this->directorio,
 	                 'archivo'	   => $this->controller_file);

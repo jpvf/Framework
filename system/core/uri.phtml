@@ -27,17 +27,25 @@ class Uri{
     
     function __construct()
     {
+        //show(__CLASS__ . ' iniciada <br>');
         self::$instance = $this;
 
         $input    = input::getInstance();
+
+        $this->init($input->server('REQUEST_URI',TRUE));
+
+        return $this;
+    }
+
+    function init($uri = '')
+    {
         $security = security::getInstance();
         $config   = config::getInstance();
         
         $host  = $config->get('base_url');
         $index = $config->get('index_page');
         
-
-        $segments = explode('/', str_replace('/' . $index,'', $input->server('REQUEST_URI',TRUE)));  
+        $segments = explode('/', str_replace('/' . $index,'', $uri));  
                 
         $this->segments = $segments; 
 
@@ -45,7 +53,7 @@ class Uri{
         {
           $this->rsegments[] = $security->xss_clean($val);
         }
-
+        
         return $this;
     }
     
@@ -61,19 +69,13 @@ class Uri{
     
     function fetch_uri()
     {
-        if ( ! $this->fetch_uri)
-        {
-            $this->fetch_uri = $this->segments;
-        }
+        $this->fetch_uri = $this->segments;        
         return $this->fetch_uri;
     }
     
     function get_uri_string()
     {
-        if ( ! $this->uri_string)
-        {
-            $this->uri_string = implode('/',$this->segments);
-        }
+        $this->uri_string = implode('/',$this->segments);
         return $this->uri_string;
     }
 
