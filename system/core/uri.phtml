@@ -30,9 +30,9 @@ class Uri{
         //show(__CLASS__ . ' iniciada <br>');
         self::$instance = $this;
 
-        $input    = input::getInstance();
+        $this->input    = input::getInstance();
 
-        $this->init($input->server('REQUEST_URI',TRUE));
+        $this->init($this->input->server('REQUEST_URI',TRUE));
 
         return $this;
     }
@@ -44,6 +44,8 @@ class Uri{
         
         $host  = $config->get('base_url');
         $index = $config->get('index_page');
+
+        $uri = str_replace($this->input->server('SCRIPT_NAME'),'', $uri);
         
         $segments = explode('/', str_replace('/' . $index,'', $uri));  
                 
