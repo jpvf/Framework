@@ -2,6 +2,7 @@
 
 class Config 
 {
+    var $folder = NULL;
 	
 	private static $instance; 
     
@@ -21,7 +22,7 @@ class Config
     }
 
     function load($files = '')
-    {
+    {   
     	if (is_string($files))
     	{
     		if (strpos($files, ','))
@@ -41,16 +42,33 @@ class Config
     		$config_file = RUTA_CONFIG . $file . EXT;
 
     		if (file_exists($config_file))
-    		{
-    			include($config_file);
+            {
+                include($config_file);
 
-    			$this->$file  = (object) ${$file};
+                $this->$file  = (object) ${$file};
 
-    			foreach ($this->$file as $key => $val)
-    			{
-    				$this->config->$key = $val;
-    			}
-    		} 		
+                foreach ($this->$file as $key => $val)
+                {
+                    $this->config->$key = $val;
+                }
+            }
+
+            if ( ! is_null($this->folder))
+            {
+               $config_file = $this->folder . 'config/' . $file . EXT;
+
+                if (file_exists($config_file))
+                {
+                    include($config_file);
+
+                    $this->$file  = (object) ${$file};
+
+                    foreach ($this->$file as $key => $val)
+                    {
+                        $this->config->$key = $val;
+                    }
+                }
+            }
 
     	}
 

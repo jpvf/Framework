@@ -42,7 +42,8 @@ class Controller{
 
       $this->session  = session::getInstance();
       $this->language = language::getInstance();
-
+      $this->config   = config::getInstance();
+      
       if (isset($this->language))
       {
          $this->language->load($this->session->get('user_lang'));

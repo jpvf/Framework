@@ -3,7 +3,7 @@
 $application_folder = 'application';
 //Variable para evitar acceso directo por url cuando no se ingresa por este script
 define('BASE'        , 1);
-define('PATH'        , $_SERVER['DOCUMENT_ROOT']);
+define('PATH'        , $_SERVER['DOCUMENT_ROOT'] . '/framework');
 define('RUTA_SISTEMA', PATH . '/system');
 define('RUTA_CORE'   , RUTA_SISTEMA . '/core/');
 define('EXT'         , '.phtml');
@@ -53,6 +53,8 @@ if (strpos($clase, '/'))
     $clase = explode('/', $clase);
     $clase = ucwords($clase[1]);
 }
+
+list($config->folder, $dump) = explode('controllers/', $router->controller_file);
 
 $clase = new $clase;
 
