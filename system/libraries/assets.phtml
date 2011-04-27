@@ -30,7 +30,7 @@ class Assets
 				return;
 			}
 
-			$src = '/assets/css/' . $row . '.css';
+			$src = base_url() . 'assets/css/' . $row . '.css';
 			self::$css .= "<link type='text/css' href='$src' rel='stylesheet' /> \n \t";
 		}
 	}
@@ -63,7 +63,7 @@ class Assets
 				return;
 			}
 			
-			$src = '/assets/js/' . $row . JS;
+			$src = base_url() . 'assets/js/' . $row . JS;
 			self::$js .= "<script type='text/javascript' src='$src' ></script> \n \t";	
 		}	
 	}

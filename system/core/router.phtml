@@ -132,6 +132,15 @@ class Router {
                 }
 
             }
+             //Es entonces un modulo con nombre de carpeta y archivo diferente?
+            if (file_exists( RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[1] .EXT))
+            {
+                $this->metodo = (isset($segments[2])) ? $segments[2] : 'index';
+                $this->directorio = '';
+                $this->controlador = $segments[1];
+                $this->controller_file = RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[1] .EXT;    
+                return $segments;            
+            } 
 
             //Es entonces un modulo con nombre de carpeta y archivo igual?
             if (file_exists( RUTA_MODULOS . $segments[0] . '/controllers/' . $segments[0] .EXT))
