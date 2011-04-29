@@ -28,9 +28,11 @@ class Controller{
       
       self::$instance = $this;
 
-      $this->load = loader::getInstance();
-
-      $this->db   = db::getInstance();
+      $this->load     = loader::getInstance();
+      $this->db       = db::getInstance();
+      $this->session  = session::getInstance();
+      $this->language = language::getInstance();
+      $this->config   = config::getInstance();
 
       foreach ($this->load->objects as $key => $val)
       {
@@ -40,10 +42,6 @@ class Controller{
           }
       }
 
-      $this->session  = session::getInstance();
-      $this->language = language::getInstance();
-      $this->config   = config::getInstance();
-      
       if (isset($this->language))
       {
          $this->language->load($this->session->get('user_lang'));
@@ -58,7 +56,9 @@ class Controller{
       spl_autoload_register(array($this->load, 'autoload_model'));    
   }
 
+  function before(){}
 
-	   
+  function after(){}
+  	   
 }
-/* End of file controller.phtml */
+/* Fin del archivo controller.phtml */
